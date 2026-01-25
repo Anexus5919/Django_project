@@ -99,13 +99,26 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     def avatar_preview(self, obj):
         """Display avatar thumbnail."""
-        if obj.avatar:
-            return format_html(
-                '<img src="{}" style="width: 40px; height: 40px; '
-                'border-radius: 50%; object-fit: cover;" />',
-                obj.avatar.url
-            )
-        return '-'
+        if obj.avatar and obj.avatar.name and hasattr(obj.avatar, 'url'):
+            try:
+                # Check if file actually exists
+                if obj.avatar.storage.exists(obj.avatar.name):
+                    return format_html(
+                        '<img src="{}" style="width: 40px; height: 40px; '
+                        'border-radius: 50%; object-fit: cover;" />',
+                        obj.avatar.url
+                    )
+            except Exception:
+                pass
+        # Return initials fallback
+        initial = obj.user.username[0].upper() if obj.user.username else '?'
+        return format_html(
+            '<div style="width: 40px; height: 40px; border-radius: 50%; '
+            'background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; '
+            'display: flex; align-items: center; justify-content: center; '
+            'font-weight: bold; font-size: 1rem;">{}</div>',
+            initial
+        )
 
     avatar_preview.short_description = 'Avatar'
 

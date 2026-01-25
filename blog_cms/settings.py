@@ -256,16 +256,36 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'            # Redirect after logout
 LOGIN_REDIRECT_URL = '/'                     # Where to go after login
 LOGIN_URL = '/accounts/login/'               # Where to redirect non-logged users
 
-# Email configuration (for development - prints to console)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# =============================================================================
+# EMAIL CONFIGURATION - Gmail SMTP
+# =============================================================================
+# Using Gmail SMTP to send real emails for newsletter and notifications.
+#
+# IMPORTANT: To use Gmail SMTP, you need to:
+# 1. Enable 2-Factor Authentication on your Google account
+# 2. Generate an App Password: https://myaccount.google.com/apppasswords
+# 3. Set environment variables or update the values below
+#
+# Set these environment variables for security:
+#   set EMAIL_HOST_USER=your-email@gmail.com
+#   set EMAIL_HOST_PASSWORD=your-16-char-app-password
+# =============================================================================
 
-# For production, use real SMTP:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Load from environment variables for security (recommended)
+# Or replace with your actual credentials for testing
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Default "From" address for emails
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'Blog CMS <noreply@blogcms.com>')
+
+# Timeout for email connections (seconds)
+EMAIL_TIMEOUT = 30
 
 # =============================================================================
 # CRISPY FORMS CONFIGURATION

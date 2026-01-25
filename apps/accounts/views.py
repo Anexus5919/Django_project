@@ -122,28 +122,134 @@ class ProfileUpdateView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         """Handle form submission."""
         user = request.user
+        profile = user.profile
 
-        # Create forms with submitted data
-        user_form = UserForm(
-            request.POST,
-            instance=user
-        )
-        profile_form = UserProfileForm(
-            request.POST,
-            request.FILES,  # For avatar upload
-            instance=user.profile
-        )
+        # Handle User model fields
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
 
-        # Validate both forms
-        if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
+        # Handle UserProfile fields
+        profile.bio = request.POST.get('bio', '')
+        profile.location = request.POST.get('location', '')
+        profile.website = request.POST.get('website', '')
+        profile.twitter = request.POST.get('twitter', '')
+        profile.github = request.POST.get('github', '')
+        profile.linkedin = request.POST.get('linkedin', '')
+
+        # Handle checkboxes (unchecked = not in POST data)
+        profile.email_notifications = 'email_notifications' in request.POST
+        profile.is_public = 'is_public' in request.POST
+
+        # Handle avatar upload
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        try:
+            user.save()
+            profile.save()
             messages.success(request, 'Your profile has been updated!')
             return redirect('accounts:profile')
-        else:
-            # Re-render with errors
-            messages.error(request, 'Please correct the errors below.')
-            return render(request, self.template_name, {
-                'user_form': user_form,
-                'profile_form': profile_form,
-            })
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
+            return render(request, self.template_name, {})
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Comprehensive dashboard for content management.
+
+    This replaces the need for Django admin for content creators.
+    Provides full control over posts, categories, tags, and comments.
+    """
+
+    template_name = 'accounts/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        from apps.blog.models import Post, Category, Tag, Comment
+
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # User's posts
+        context['published_posts'] = user.posts.filter(status='published').order_by('-published_at')[:10]
+        context['draft_posts'] = user.posts.filter(status='draft').order_by('-updated_at')[:10]
+
+        # Recent comments on user's posts
+        context['recent_comments'] = Comment.objects.filter(
+            post__author=user
+        ).order_by('-created_at')[:10]
+
+        # Statistics
+        context['stats'] = {
+            'total_published': user.posts.filter(status='published').count(),
+            'total_drafts': user.posts.filter(status='draft').count(),
+            'total_comments': Comment.objects.filter(post__author=user).count(),
+            'total_views': sum(p.views_count for p in user.posts.filter(status='published')),
+            'pending_comments': Comment.objects.filter(post__author=user, is_approved=False).count(),
+        }
+
+        # For staff users, show additional management options
+        if user.is_staff:
+            context['all_categories'] = Category.objects.all()
+            context['all_tags'] = Tag.objects.all()
+            context['total_posts'] = Post.objects.count()
+            context['total_users'] = User.objects.count()
+
+        return context
+
+
+class ManageCommentsView(LoginRequiredMixin, TemplateView):
+    """
+    Manage comments on user's posts.
+
+    Allows approving, rejecting, and deleting comments.
+    """
+
+    template_name = 'accounts/manage_comments.html'
+
+    def get_context_data(self, **kwargs):
+        from apps.blog.models import Comment
+
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Get all comments on user's posts
+        context['comments'] = Comment.objects.filter(
+            post__author=user
+        ).select_related('post', 'author').order_by('-created_at')
+
+        # Filter by status if requested
+        status = self.request.GET.get('status')
+        if status == 'pending':
+            context['comments'] = context['comments'].filter(is_approved=False)
+        elif status == 'approved':
+            context['comments'] = context['comments'].filter(is_approved=True)
+
+        return context
+
+
+class ApproveCommentView(LoginRequiredMixin, TemplateView):
+    """
+    Approve or reject a comment.
+    """
+
+    def post(self, request, pk):
+        from apps.blog.models import Comment
+
+        comment = get_object_or_404(Comment, pk=pk, post__author=request.user)
+        action = request.POST.get('action')
+
+        if action == 'approve':
+            comment.is_approved = True
+            comment.save()
+            messages.success(request, 'Comment approved.')
+        elif action == 'reject':
+            comment.is_approved = False
+            comment.save()
+            messages.success(request, 'Comment rejected.')
+        elif action == 'delete':
+            comment.delete()
+            messages.success(request, 'Comment deleted.')
+
+        return redirect('accounts:manage_comments')

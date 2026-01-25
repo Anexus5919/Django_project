@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - {{ site_name }}{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="dashboard-title">
+                    <i class="bi bi-speedometer2"></i>
+                    Dashboard
+                </h1>
+                <p class="dashboard-subtitle">Manage your content and track performance</p>
+            </div>
+            <a href="{% url 'blog:post_create' %}" class="btn btn-light">
+                <i class="bi bi-plus-lg me-2"></i>New Post
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon published">
+                    <i class="bi bi-file-earmark-check"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number">{{ stats.total_published }}</span>
+                    <span class="stat-label">Published</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon drafts">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number">{{ stats.total_drafts }}</span>
+                    <span class="stat-label">Drafts</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon views">
+                    <i class="bi bi-eye"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number">{{ stats.total_views }}</span>
+                    <span class="stat-label">Total Views</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon comments">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number">{{ stats.total_comments }}</span>
+                    <span class="stat-label">Comments</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-bar mb-4">
+        <a href="{% url 'blog:post_create' %}" class="quick-action">
+            <i class="bi bi-plus-circle"></i>
+            <span>Write Post</span>
+        </a>
+        <a href="{% url 'blog:my_drafts' %}" class="quick-action">
+            <i class="bi bi-file-earmark"></i>
+            <span>My Drafts</span>
+        </a>
+        <a href="{% url 'accounts:manage_comments' %}" class="quick-action">
+            <i class="bi bi-chat-square-text"></i>
+            <span>Comments{% if stats.pending_comments > 0 %} <span class="badge bg-danger">{{ stats.pending_comments }}</span>{% endif %}</span>
+        </a>
+        <a href="{% url 'accounts:profile_edit' %}" class="quick-action">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Published Posts -->
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-file-earmark-check me-2"></i>Published Posts</h5>
+                    <a href="{% url 'blog:author_posts' user.username %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body-custom">
+                    {% for post in published_posts %}
+                    <div class="post-item">
+                        <div class="post-info">
+                            <a href="{{ post.get_absolute_url }}" class="post-title">{{ post.title|truncatechars:40 }}</a>
+                            <div class="post-meta">
+                                <span><i class="bi bi-calendar3"></i> {{ post.published_at|date:"M d, Y" }}</span>
+                                <span><i class="bi bi-eye"></i> {{ post.views_count }}</span>
+                            </div>
+                        </div>
+                        <div class="post-actions">
+                            <a href="{% url 'blog:post_update' post.slug %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-mini">
+                        <i class="bi bi-file-earmark-x"></i>
+                        <p>No published posts yet</p>
+                        <a href="{% url 'blog:post_create' %}" class="btn btn-primary btn-sm">Create Your First Post</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft Posts -->
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom warning">
+                    <h5><i class="bi bi-file-earmark-text me-2"></i>Draft Posts</h5>
+                    <a href="{% url 'blog:my_drafts' %}" class="btn btn-sm btn-outline-warning">View All</a>
+                </div>
+                <div class="card-body-custom">
+                    {% for post in draft_posts %}
+                    <div class="post-item">
+                        <div class="post-info">
+                            <a href="{% url 'blog:post_update' post.slug %}" class="post-title">{{ post.title|truncatechars:40 }}</a>
+                            <div class="post-meta">
+                                <span><i class="bi bi-clock"></i> Edited {{ post.updated_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        <div class="post-actions">
+                            <form method="POST" action="{% url 'blog:publish_post' post.slug %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-send"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'blog:post_update' post.slug %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-mini">
+                        <i class="bi bi-file-earmark"></i>
+                        <p>No drafts</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Comments -->
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-chat-dots me-2"></i>Recent Comments on Your Posts</h5>
+                    <a href="{% url 'accounts:manage_comments' %}" class="btn btn-sm btn-outline-primary">Manage All</a>
+                </div>
+                <div class="card-body-custom">
+                    {% for comment in recent_comments %}
+                    <div class="comment-item">
+                        <div class="comment-avatar">
+                            {{ comment.author.username|slice:":1"|upper }}
+                        </div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <strong>{{ comment.author.username }}</strong>
+                                <span class="text-muted">on</span>
+                                <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title|truncatechars:30 }}</a>
+                                <span class="badge {% if comment.is_approved %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {% if comment.is_approved %}Approved{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+                            <p class="comment-text">{{ comment.content|truncatechars:100 }}</p>
+                            <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                        </div>
+                        <div class="comment-actions">
+                            {% if not comment.is_approved %}
+                            <form method="POST" action="{% url 'accounts:comment_action' comment.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{% url 'accounts:comment_action' comment.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-mini">
+                        <i class="bi bi-chat-square"></i>
+                        <p>No comments yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Header */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 2rem 0;
+        color: white;
+    }
+
+    .dashboard-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dashboard-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: var(--shadow);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-icon.published { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.drafts { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.views { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+    .stat-icon.comments { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--gray-900); line-height: 1; }
+    .stat-label { font-size: 0.8125rem; color: var(--gray-500); }
+
+    /* Quick Actions Bar */
+    .quick-actions-bar {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border-radius: var(--radius-lg);
+        color: var(--gray-700);
+        text-decoration: none;
+        font-weight: 500;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+
+    .quick-action:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .quick-action i { font-size: 1.25rem; }
+
+    /* Dashboard Cards */
+    .dashboard-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .card-header-custom h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .card-header-custom.warning {
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .card-body-custom {
+        padding: 0;
+    }
+
+    /* Post Items */
+    .post-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .post-item:last-child { border-bottom: none; }
+    .post-item:hover { background: var(--gray-50); }
+
+    .post-info { flex: 1; min-width: 0; }
+
+    .post-title {
+        display: block;
+        font-weight: 600;
+        color: var(--gray-800);
+        text-decoration: none;
+        margin-bottom: 0.25rem;
+    }
+
+    .post-title:hover { color: var(--primary); }
+
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+    }
+
+    .post-meta span { display: flex; align-items: center; gap: 0.25rem; }
+
+    .post-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    /* Comment Items */
+    .comment-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .comment-item:last-child { border-bottom: none; }
+
+    .comment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .comment-content { flex: 1; min-width: 0; }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.25rem;
+    }
+
+    .comment-text {
+        color: var(--gray-600);
+        font-size: 0.9375rem;
+        margin: 0.5rem 0;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    /* Empty State */
+    .empty-state-mini {
+        text-align: center;
+        padding: 2rem;
+        color: var(--gray-500);
+    }
+
+    .empty-state-mini i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        opacity: 0.5;
+    }
+
+    .empty-state-mini p { margin-bottom: 0.75rem; }
+
+    @media (max-width: 767.98px) {
+        .post-item, .comment-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .post-actions, .comment-actions {
+            margin-left: 0;
+        }
+
+        .quick-action span { display: none; }
+        .quick-action { padding: 0.75rem; }
+    }
+</style>
+{% endblock %}

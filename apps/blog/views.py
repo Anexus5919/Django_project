@@ -43,7 +43,7 @@ from django.urls import reverse_lazy
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 
-from .models import Post, Category, Tag, Comment
+from .models import Post, Category, Tag, Comment, CommentReaction
 from .forms import PostForm, CommentForm, SearchForm
 
 
@@ -173,10 +173,27 @@ class PostDetailView(DetailView):
         context['comments'] = self.object.comments.filter(
             is_approved=True,
             parent=None  # Only top-level comments
-        ).select_related('author').prefetch_related('replies')
+        ).select_related('author').prefetch_related('replies', 'reactions')
 
         # Get related posts
         context['related_posts'] = self.object.get_related_posts()
+
+        # Get user's reactions for all comments (for highlighting active reactions)
+        import json
+        if self.request.user.is_authenticated:
+            user_reactions = CommentReaction.objects.filter(
+                comment__post=self.object,
+                user=self.request.user
+            ).values('comment_id', 'reaction_type')
+            reactions_dict = {
+                str(r['comment_id']): r['reaction_type'] for r in user_reactions
+            }
+            context['user_reactions'] = json.dumps(reactions_dict)
+        else:
+            context['user_reactions'] = json.dumps({})
+
+        # Add reaction emojis mapping for template
+        context['reaction_emojis'] = CommentReaction.REACTION_EMOJIS
 
         return context
 
@@ -204,9 +221,25 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         """
         Called when form is valid.
         Set the author to the current user before saving.
+        Handle publish vs draft action from buttons.
         """
+        from django.utils import timezone
+
         form.instance.author = self.request.user
-        messages.success(self.request, 'Your post has been created!')
+
+        # Check which button was clicked
+        action = self.request.POST.get('action', 'publish')
+
+        if action == 'draft':
+            form.instance.status = 'draft'
+            form.instance.published_at = None
+            messages.success(self.request, 'Your post has been saved as a draft!')
+        else:
+            form.instance.status = 'published'
+            if not form.instance.published_at:
+                form.instance.published_at = timezone.now()
+            messages.success(self.request, 'Your post has been published!')
+
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -238,13 +271,28 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user == post.author
 
     def form_valid(self, form):
-        messages.success(self.request, 'Your post has been updated!')
+        """
+        Handle update with publish/draft action buttons.
+        """
+        from django.utils import timezone
+
+        # Check which button was clicked
+        action = self.request.POST.get('action', 'publish')
+
+        if action == 'draft':
+            form.instance.status = 'draft'
+            messages.success(self.request, 'Your post has been saved as a draft!')
+        else:
+            form.instance.status = 'published'
+            if not form.instance.published_at:
+                form.instance.published_at = timezone.now()
+            messages.success(self.request, 'Your post has been published!')
+
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Edit Post'
-        context['button_text'] = 'Update Post'
         return context
 
 
@@ -445,3 +493,199 @@ class AuthorPostsView(ListView):
         context = super().get_context_data(**kwargs)
         context['author'] = self.author
         return context
+
+
+class MyDraftsView(LoginRequiredMixin, ListView):
+    """
+    Display user's draft posts.
+
+    This page shows all drafts so users can continue editing
+    and publish them when ready.
+    """
+
+    model = Post
+    template_name = 'blog/my_drafts.html'
+    context_object_name = 'drafts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        """Get only the current user's drafts."""
+        return Post.objects.filter(
+            author=self.request.user,
+            status='draft'
+        ).select_related('category').prefetch_related('tags').order_by('-updated_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Also get published count for stats
+        context['published_count'] = Post.objects.filter(
+            author=self.request.user,
+            status='published'
+        ).count()
+        context['draft_count'] = self.get_queryset().count()
+        return context
+
+
+class PublishPostView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Publish a draft post.
+
+    Changes the post status from 'draft' to 'published'
+    and sets the published_at date.
+    """
+
+    def test_func(self):
+        """Only the author can publish their own posts."""
+        post = get_object_or_404(Post, slug=self.kwargs['slug'])
+        return self.request.user == post.author
+
+    def post(self, request, slug):
+        """Handle POST request to publish the post."""
+        from django.utils import timezone
+
+        post = get_object_or_404(Post, slug=slug, author=request.user)
+
+        if post.status == 'draft':
+            post.status = 'published'
+            post.published_at = timezone.now()
+            post.save()
+            messages.success(request, f'"{post.title}" has been published!')
+        else:
+            messages.info(request, 'This post is already published.')
+
+        return redirect('blog:post_detail', slug=post.slug)
+
+    def get(self, request, slug):
+        """Redirect GET requests to POST."""
+        return redirect('blog:my_drafts')
+
+
+class NewsletterSubscribeView(View):
+    """
+    Handle newsletter subscription.
+
+    Accepts email via POST, saves subscriber, and sends welcome email.
+    """
+
+    def post(self, request):
+        from django.core.mail import send_mail
+        from django.conf import settings
+        from django.http import JsonResponse
+        from .models import NewsletterSubscriber
+
+        email = request.POST.get('email', '').strip()
+
+        if not email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Please enter a valid email address.'
+            })
+
+        # Check if already subscribed
+        if NewsletterSubscriber.objects.filter(email=email).exists():
+            subscriber = NewsletterSubscriber.objects.get(email=email)
+            if subscriber.is_active:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This email is already subscribed.'
+                })
+            else:
+                # Reactivate subscription
+                subscriber.is_active = True
+                subscriber.save()
+                message = 'Welcome back! Your subscription has been reactivated.'
+        else:
+            # Create new subscriber
+            NewsletterSubscriber.objects.create(email=email, is_verified=True)
+            message = 'Thank you for subscribing!'
+
+        # Send welcome email
+        try:
+            send_mail(
+                subject='Welcome to Blog CMS Newsletter!',
+                message=f'''Hello!
+
+Thank you for subscribing to our newsletter. You'll receive updates on our latest posts and content.
+
+We're excited to have you join our community!
+
+Best regards,
+The Blog CMS Team
+
+---
+If you didn't subscribe to this newsletter, please ignore this email.
+''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass  # Don't fail if email sending fails
+
+        return JsonResponse({
+            'success': True,
+            'message': message
+        })
+
+
+class ReactToCommentView(LoginRequiredMixin, View):
+    """
+    Handle emoji reactions on comments.
+
+    Supports adding, changing, and removing reactions.
+    If user already has the same reaction, it removes it (toggle).
+    If user has a different reaction, it updates to the new one.
+    """
+
+    def post(self, request, comment_id):
+        from django.http import JsonResponse
+
+        comment = get_object_or_404(Comment, pk=comment_id)
+        reaction_type = request.POST.get('reaction_type', '').strip()
+
+        # Validate reaction type
+        valid_types = [choice[0] for choice in CommentReaction.REACTION_CHOICES]
+        if reaction_type not in valid_types:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid reaction type.'
+            }, status=400)
+
+        # Check if user already has a reaction on this comment
+        existing_reaction = CommentReaction.objects.filter(
+            comment=comment,
+            user=request.user
+        ).first()
+
+        if existing_reaction:
+            if existing_reaction.reaction_type == reaction_type:
+                # Same reaction - toggle off (remove)
+                existing_reaction.delete()
+                action = 'removed'
+            else:
+                # Different reaction - update
+                existing_reaction.reaction_type = reaction_type
+                existing_reaction.save()
+                action = 'updated'
+        else:
+            # No existing reaction - create new
+            CommentReaction.objects.create(
+                comment=comment,
+                user=request.user,
+                reaction_type=reaction_type
+            )
+            action = 'added'
+
+        # Get updated reaction summary
+        summary = comment.get_reactions_summary()
+        user_reaction = comment.get_user_reaction(request.user)
+
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'total_reactions': summary['total'],
+            'reactions_by_type': summary['by_type'],
+            'top_reactions': summary['top_reactions'],
+            'user_reaction': user_reaction,
+            'emojis': CommentReaction.REACTION_EMOJIS
+        })

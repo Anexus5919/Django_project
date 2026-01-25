@@ -203,15 +203,21 @@ function initScrollToTop() {
     button.setAttribute('aria-label', 'Scroll to top');
     button.style.cssText = `
         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 45px;
-        height: 45px;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         display: none;
         z-index: 1000;
-        opacity: 0.8;
-        transition: opacity 0.2s;
+        opacity: 0.9;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        padding: 0;
+        border: none;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.25rem;
     `;
 
     document.body.appendChild(button);
@@ -219,7 +225,7 @@ function initScrollToTop() {
     // Show/hide based on scroll position
     window.addEventListener('scroll', function() {
         if (window.scrollY > 300) {
-            button.style.display = 'block';
+            button.style.display = 'flex';
         } else {
             button.style.display = 'none';
         }

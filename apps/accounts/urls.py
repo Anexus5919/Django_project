@@ -31,6 +31,31 @@ urlpatterns = [
         name='profile'
     ),
 
+    # ----- Dashboard -----
+    # URL: /profile/dashboard/
+    # Full content management dashboard
+    path(
+        'dashboard/',
+        views.DashboardView.as_view(),
+        name='dashboard'
+    ),
+
+    # ----- Manage Comments -----
+    # URL: /profile/comments/
+    path(
+        'comments/',
+        views.ManageCommentsView.as_view(),
+        name='manage_comments'
+    ),
+
+    # ----- Approve/Reject Comment -----
+    # URL: /profile/comment/5/action/
+    path(
+        'comment/<int:pk>/action/',
+        views.ApproveCommentView.as_view(),
+        name='comment_action'
+    ),
+
     # ----- Edit Profile -----
     # URL: /profile/edit/
     path(

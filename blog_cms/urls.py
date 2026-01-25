@@ -26,17 +26,16 @@ Example:
 =============================================================================
 """
 
-from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
 
 # Main URL patterns
 urlpatterns = [
-    # ----- Admin Panel -----
-    # Access at: http://localhost:8000/admin/
-    # Django's built-in admin interface
-    path('admin/', admin.site.urls),
+    # ----- Admin Panel Disabled -----
+    # All content is managed through the frontend dashboard
+    path('admin/', lambda request: redirect('/')),
 
     # ----- Blog URLs -----
     # All blog-related URLs (posts, categories, tags, search)

@@ -267,24 +267,70 @@
                                     <p>{{ comment.content }}</p>
                                 </div>
 
-                                {% if user.is_authenticated %}
-                                <div class="comment-actions">
-                                    <button class="btn btn-sm btn-link reply-btn" data-comment-id="{{ comment.id }}">
-                                        <i class="bi bi-reply me-1"></i>Reply
+                                <!-- Comment Actions: Reactions + Reply -->
+                                <div class="comment-actions-bar">
+                                    <!-- Emoji Reactions -->
+                                    <div class="reaction-container" data-comment-id="{{ comment.id }}">
+                                        <button class="reaction-trigger-btn" type="button">
+                                            {% with reactions=comment.get_reactions_summary %}
+                                            {% if reactions.total > 0 %}
+                                                <span class="reaction-emojis">
+                                                    {% for r_type in reactions.top_reactions %}
+                                                        {% if r_type == 'like' %}👍{% endif %}
+                                                        {% if r_type == 'love' %}❤️{% endif %}
+                                                        {% if r_type == 'celebrate' %}🎉{% endif %}
+                                                        {% if r_type == 'insightful' %}💡{% endif %}
+                                                        {% if r_type == 'curious' %}🤔{% endif %}
+                                                        {% if r_type == 'support' %}🙏{% endif %}
+                                                    {% endfor %}
+                                                </span>
+                                                <span class="reaction-count">{{ reactions.total }}</span>
+                                            {% else %}
+                                                <i class="bi bi-emoji-smile"></i>
+                                                <span>React</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </button>
+                                        <!-- Reaction Picker (hidden by default) -->
+                                        <div class="reaction-picker" data-user-reaction="{% if user_reactions %}{{ user_reactions|default_if_none:'' }}{% endif %}">
+                                            <button type="button" class="reaction-option" data-reaction="like" title="Like">👍</button>
+                                            <button type="button" class="reaction-option" data-reaction="love" title="Love">❤️</button>
+                                            <button type="button" class="reaction-option" data-reaction="celebrate" title="Celebrate">🎉</button>
+                                            <button type="button" class="reaction-option" data-reaction="insightful" title="Insightful">💡</button>
+                                            <button type="button" class="reaction-option" data-reaction="curious" title="Curious">🤔</button>
+                                            <button type="button" class="reaction-option" data-reaction="support" title="Support">🙏</button>
+                                        </div>
+                                    </div>
+
+                                    {% if user.is_authenticated %}
+                                    <!-- Reply Button -->
+                                    <button class="action-btn reply-btn" type="button" data-comment-id="{{ comment.id }}">
+                                        <i class="bi bi-reply"></i>
+                                        <span>Reply</span>
                                     </button>
+                                    {% endif %}
                                 </div>
 
-                                <!-- Reply Form -->
-                                <div class="reply-form d-none" id="reply-form-{{ comment.id }}">
-                                    <form method="POST" action="{% url 'blog:add_comment' post.slug %}">
+                                {% if user.is_authenticated %}
+                                <!-- Reply Form (hidden by default) -->
+                                <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none;">
+                                    <form method="POST" action="{% url 'blog:add_comment' post.slug %}" class="reply-form-inner">
                                         {% csrf_token %}
                                         <input type="hidden" name="parent_id" value="{{ comment.id }}">
-                                        <div class="input-group">
-                                            <input type="text" name="content" class="form-control"
-                                                   placeholder="Write a reply..." required>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-send"></i>
-                                            </button>
+                                        <div class="d-flex gap-2 align-items-start">
+                                            <div class="avatar-initials flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                                                {{ user.username|slice:":1"|upper }}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <textarea name="content" class="form-control form-control-sm"
+                                                          rows="2" placeholder="Write a reply to {{ comment.author.username }}..." required></textarea>
+                                                <div class="d-flex gap-2 mt-2 justify-content-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary cancel-reply-btn" data-comment-id="{{ comment.id }}">Cancel</button>
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-send me-1"></i>Reply
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </form>
                                 </div>
@@ -658,14 +704,145 @@
         line-height: 1.6;
     }
 
-    .comment-actions {
+    /* Comment Actions Bar */
+    .comment-actions-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--gray-200);
     }
 
-    .reply-form {
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius);
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .action-btn:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+    }
+
+    /* Reaction Container */
+    .reaction-container {
+        position: relative;
+    }
+
+    .reaction-trigger-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius);
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .reaction-trigger-btn:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+    }
+
+    .reaction-trigger-btn .reaction-emojis {
+        display: inline-flex;
+        font-size: 1rem;
+    }
+
+    .reaction-trigger-btn .reaction-count {
+        margin-left: 0.25rem;
+        color: var(--gray-600);
+    }
+
+    /* Reaction Picker */
+    .reaction-picker {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        display: none;
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 100;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .reaction-container:hover .reaction-picker,
+    .reaction-picker.show {
+        display: flex;
+        gap: 0.25rem;
+        animation: fadeInUp 0.2s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .reaction-option {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .reaction-option:hover {
+        background: var(--gray-100);
+        transform: scale(1.3);
+    }
+
+    .reaction-option.active {
+        background: rgba(79, 70, 229, 0.1);
+        transform: scale(1.1);
+    }
+
+    /* Reply Form Container */
+    .reply-form-container {
         margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--gray-200);
+        padding: 1rem;
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .reply-form-inner textarea {
+        resize: none;
+        border-color: var(--gray-300);
+    }
+
+    .reply-form-inner textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     .replies-list {
@@ -752,19 +929,168 @@
 
 {% block extra_js %}
 <script>
-    // Toggle reply forms
-    document.querySelectorAll('.reply-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const commentId = this.dataset.commentId;
-            const replyForm = document.getElementById('reply-form-' + commentId);
-            replyForm.classList.toggle('d-none');
-            if (!replyForm.classList.contains('d-none')) {
-                replyForm.querySelector('input[name="content"]').focus();
+    // User's current reactions (passed from Django context)
+    const USER_REACTIONS = {{ user_reactions|safe|default:"{}" }};
+
+    // Initialize active reaction states on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        Object.keys(USER_REACTIONS).forEach(commentId => {
+            const reactionType = USER_REACTIONS[commentId];
+            const container = document.querySelector(`.reaction-container[data-comment-id="${commentId}"]`);
+            if (container) {
+                const activeBtn = container.querySelector(`[data-reaction="${reactionType}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
             }
         });
     });
 
-    // Copy link to clipboard
+    // ============================================
+    // Reply Button Functionality
+    // ============================================
+    document.querySelectorAll('.reply-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const commentId = this.dataset.commentId;
+            const replyForm = document.getElementById('reply-form-' + commentId);
+
+            if (replyForm) {
+                // Toggle visibility
+                const isHidden = replyForm.style.display === 'none' || !replyForm.style.display;
+                replyForm.style.display = isHidden ? 'block' : 'none';
+
+                // Focus the textarea when showing
+                if (isHidden) {
+                    const textarea = replyForm.querySelector('textarea[name="content"]');
+                    if (textarea) {
+                        textarea.focus();
+                    }
+                }
+            }
+        });
+    });
+
+    // Cancel reply button
+    document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const commentId = this.dataset.commentId;
+            const replyForm = document.getElementById('reply-form-' + commentId);
+            if (replyForm) {
+                replyForm.style.display = 'none';
+                const textarea = replyForm.querySelector('textarea[name="content"]');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            }
+        });
+    });
+
+    // ============================================
+    // Emoji Reactions Functionality
+    // ============================================
+    const REACTION_EMOJIS = {
+        'like': '👍',
+        'love': '❤️',
+        'celebrate': '🎉',
+        'insightful': '💡',
+        'curious': '🤔',
+        'support': '🙏'
+    };
+
+    // Handle reaction clicks
+    document.querySelectorAll('.reaction-option').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            {% if user.is_authenticated %}
+            const container = this.closest('.reaction-container');
+            const commentId = container.dataset.commentId;
+            const reactionType = this.dataset.reaction;
+
+            // Send AJAX request
+            fetch(`/comment/${commentId}/react/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `reaction_type=${reactionType}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the UI
+                    updateReactionUI(container, data);
+
+                    // Update active state
+                    container.querySelectorAll('.reaction-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    if (data.user_reaction) {
+                        const activeBtn = container.querySelector(`[data-reaction="${data.user_reaction}"]`);
+                        if (activeBtn) activeBtn.classList.add('active');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            {% else %}
+            // Redirect to login if not authenticated
+            window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+            {% endif %}
+        });
+    });
+
+    // Update reaction UI after API response
+    function updateReactionUI(container, data) {
+        const triggerBtn = container.querySelector('.reaction-trigger-btn');
+
+        if (data.total_reactions > 0) {
+            // Build emoji display
+            let emojisHtml = '<span class="reaction-emojis">';
+            data.top_reactions.forEach(type => {
+                emojisHtml += `<span class="reaction-emoji">${REACTION_EMOJIS[type]}</span>`;
+            });
+            emojisHtml += '</span>';
+
+            triggerBtn.innerHTML = `
+                ${emojisHtml}
+                <span class="reaction-count">${data.total_reactions}</span>
+            `;
+        } else {
+            triggerBtn.innerHTML = `
+                <i class="bi bi-emoji-smile"></i>
+                <span>React</span>
+            `;
+        }
+    }
+
+    // Close reaction picker when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.reaction-container')) {
+            document.querySelectorAll('.reaction-picker').forEach(picker => {
+                picker.classList.remove('show');
+            });
+        }
+    });
+
+    // Toggle reaction picker on mobile (touch devices)
+    document.querySelectorAll('.reaction-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const picker = this.closest('.reaction-container').querySelector('.reaction-picker');
+            if (picker) {
+                picker.classList.toggle('show');
+            }
+        });
+    });
+
+    // ============================================
+    // Copy Link to Clipboard
+    // ============================================
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.querySelector('.copy-link');

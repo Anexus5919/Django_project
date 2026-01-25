@@ -46,6 +46,44 @@ class Category(models.Model):
     Database table: blog_category
     """
 
+    # Icon choices for categories (Bootstrap Icons)
+    ICON_CHOICES = (
+        ('bi-laptop', 'Technology'),
+        ('bi-globe', 'Web Development'),
+        ('bi-code-slash', 'Programming'),
+        ('bi-graph-up', 'Data Science'),
+        ('bi-mortarboard', 'Tutorial'),
+        ('bi-newspaper', 'News'),
+        ('bi-camera', 'Photography'),
+        ('bi-palette', 'Design'),
+        ('bi-briefcase', 'Business'),
+        ('bi-heart', 'Lifestyle'),
+        ('bi-airplane', 'Travel'),
+        ('bi-cup-hot', 'Food'),
+        ('bi-controller', 'Gaming'),
+        ('bi-music-note', 'Music'),
+        ('bi-film', 'Entertainment'),
+        ('bi-book', 'Education'),
+        ('bi-lightbulb', 'Ideas'),
+        ('bi-chat-quote', 'Opinion'),
+    )
+
+    # Color choices for category styling
+    COLOR_CHOICES = (
+        ('#4f46e5', 'Indigo'),
+        ('#2563eb', 'Blue'),
+        ('#0891b2', 'Cyan'),
+        ('#059669', 'Green'),
+        ('#84cc16', 'Lime'),
+        ('#eab308', 'Yellow'),
+        ('#f97316', 'Orange'),
+        ('#ef4444', 'Red'),
+        ('#ec4899', 'Pink'),
+        ('#8b5cf6', 'Purple'),
+        ('#6366f1', 'Violet'),
+        ('#64748b', 'Slate'),
+    )
+
     # ----- Fields -----
 
     # The category name (e.g., "Technology")
@@ -69,6 +107,22 @@ class Category(models.Model):
     description = models.TextField(
         blank=True,  # Optional in forms
         help_text="Brief description of this category"
+    )
+
+    # Icon for category (used in default post images)
+    icon = models.CharField(
+        max_length=50,
+        choices=ICON_CHOICES,
+        default='bi-newspaper',
+        help_text="Bootstrap icon for this category"
+    )
+
+    # Color for category styling
+    color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES,
+        default='#4f46e5',
+        help_text="Color for category badge and default image"
     )
 
     # When the category was created
@@ -433,3 +487,151 @@ class Comment(models.Model):
     def is_reply(self):
         """Check if this comment is a reply to another comment."""
         return self.parent is not None
+
+    def get_reactions_summary(self):
+        """
+        Get a summary of reactions for this comment.
+        Returns a dict with reaction counts and total.
+        """
+        from django.db.models import Count
+
+        reactions = self.reactions.values('reaction_type').annotate(
+            count=Count('id')
+        ).order_by('-count')
+
+        summary = {
+            'total': 0,
+            'by_type': {},
+            'top_reactions': []
+        }
+
+        for r in reactions:
+            summary['by_type'][r['reaction_type']] = r['count']
+            summary['total'] += r['count']
+            if len(summary['top_reactions']) < 3:
+                summary['top_reactions'].append(r['reaction_type'])
+
+        return summary
+
+    def get_user_reaction(self, user):
+        """Get the current user's reaction on this comment, if any."""
+        if not user.is_authenticated:
+            return None
+        reaction = self.reactions.filter(user=user).first()
+        return reaction.reaction_type if reaction else None
+
+
+class CommentReaction(models.Model):
+    """
+    Comment Reaction Model - Emoji reactions on comments like LinkedIn.
+
+    Users can react to comments with one of 6 emojis.
+    Each user can only have one reaction per comment (can change it).
+
+    Database table: blog_commentreaction
+    """
+
+    # Available reaction types - similar to LinkedIn
+    REACTION_CHOICES = (
+        ('like', 'Like'),           # Thumbs up
+        ('love', 'Love'),           # Heart
+        ('celebrate', 'Celebrate'), # Clapping hands
+        ('insightful', 'Insightful'),  # Light bulb
+        ('curious', 'Curious'),     # Thinking face
+        ('support', 'Support'),     # Hands together
+    )
+
+    # Map reactions to emojis for display
+    REACTION_EMOJIS = {
+        'like': '👍',
+        'love': '❤️',
+        'celebrate': '🎉',
+        'insightful': '💡',
+        'curious': '🤔',
+        'support': '🙏',
+    }
+
+    # Link to the comment being reacted to
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name='reactions',
+    )
+
+    # User who reacted
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment_reactions',
+    )
+
+    # Type of reaction
+    reaction_type = models.CharField(
+        max_length=20,
+        choices=REACTION_CHOICES,
+    )
+
+    # When the reaction was created/updated
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Comment Reaction'
+        verbose_name_plural = 'Comment Reactions'
+        # Each user can only have one reaction per comment
+        unique_together = ['comment', 'user']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} reacted {self.reaction_type} on comment #{self.comment.id}"
+
+    @property
+    def emoji(self):
+        """Return the emoji for this reaction."""
+        return self.REACTION_EMOJIS.get(self.reaction_type, '👍')
+
+    @classmethod
+    def get_emoji_for_type(cls, reaction_type):
+        """Class method to get emoji for a reaction type."""
+        return cls.REACTION_EMOJIS.get(reaction_type, '👍')
+
+
+class NewsletterSubscriber(models.Model):
+    """
+    Newsletter Subscriber Model - Store email subscribers.
+
+    Stores email addresses of users who want to receive updates.
+    Includes verification and unsubscribe functionality.
+
+    Database table: blog_newslettersubscriber
+    """
+
+    email = models.EmailField(
+        unique=True,
+        help_text="Subscriber's email address"
+    )
+
+    # Verification
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Email has been verified"
+    )
+
+    # Active status (for unsubscribe)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Subscription is active"
+    )
+
+    # Timestamps
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Newsletter Subscriber'
+        verbose_name_plural = 'Newsletter Subscribers'
+        ordering = ['-subscribed_at']
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Unsubscribed"
+        return f"{self.email} ({status})"

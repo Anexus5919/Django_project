@@ -134,4 +134,37 @@ urlpatterns = [
         views.AuthorPostsView.as_view(),
         name='author_posts'
     ),
+
+    # ----- My Drafts -----
+    # URL: /my-drafts/
+    path(
+        'my-drafts/',
+        views.MyDraftsView.as_view(),
+        name='my_drafts'
+    ),
+
+    # ----- Publish Post -----
+    # URL: /blog/my-post/publish/
+    path(
+        'blog/<slug:slug>/publish/',
+        views.PublishPostView.as_view(),
+        name='publish_post'
+    ),
+
+    # ----- Newsletter Subscribe -----
+    # URL: /newsletter/subscribe/
+    path(
+        'newsletter/subscribe/',
+        views.NewsletterSubscribeView.as_view(),
+        name='newsletter_subscribe'
+    ),
+
+    # ----- React to Comment -----
+    # URL: /comment/5/react/
+    # Handles emoji reactions on comments (like LinkedIn)
+    path(
+        'comment/<int:comment_id>/react/',
+        views.ReactToCommentView.as_view(),
+        name='react_to_comment'
+    ),
 ]

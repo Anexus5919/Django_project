@@ -127,17 +127,71 @@ Reusable sidebar with:
         <p class="text-white-50 small mb-3">
             Get the latest posts and updates delivered to your inbox.
         </p>
-        <form class="newsletter-form">
+        <form class="newsletter-form" id="newsletter-form" action="{% url 'blog:newsletter_subscribe' %}" method="POST">
+            {% csrf_token %}
             <div class="input-group mb-2">
-                <input type="email" class="form-control" placeholder="Enter your email">
-                <button class="btn btn-light" type="submit">
+                <input type="email" name="email" class="form-control" placeholder="Enter your email" required id="newsletter-email">
+                <button class="btn btn-light" type="submit" id="newsletter-btn">
                     <i class="bi bi-send"></i>
                 </button>
             </div>
+            <div id="newsletter-message" class="small mb-2" style="display: none;"></div>
             <small class="text-white-50">We respect your privacy. Unsubscribe anytime.</small>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('newsletter-form');
+    const emailInput = document.getElementById('newsletter-email');
+    const messageDiv = document.getElementById('newsletter-message');
+    const submitBtn = document.getElementById('newsletter-btn');
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = emailInput.value.trim();
+            if (!email) return;
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.style.display = 'block';
+                if (data.success) {
+                    messageDiv.className = 'small mb-2 text-white';
+                    messageDiv.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + data.message;
+                    emailInput.value = '';
+                } else {
+                    messageDiv.className = 'small mb-2 text-warning';
+                    messageDiv.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>' + data.message;
+                }
+            })
+            .catch(error => {
+                messageDiv.style.display = 'block';
+                messageDiv.className = 'small mb-2 text-warning';
+                messageDiv.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Something went wrong. Please try again.';
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send"></i>';
+            });
+        });
+    }
+});
+</script>
 
 <!-- Author Card (if viewing a post) -->
 {% if post and post.author %}

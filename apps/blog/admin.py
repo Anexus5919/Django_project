@@ -21,7 +21,9 @@ Access admin at: http://localhost:8000/admin/
 
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Tag, Post, Comment
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from .models import Category, Tag, Post, Comment, NewsletterSubscriber
 
 
 @admin.register(Category)
@@ -48,7 +50,7 @@ class CategoryAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
     # Fields shown in the edit form
-    fields = ['name', 'slug', 'description']
+    fields = ['name', 'slug', 'description', 'icon', 'color']
 
     def post_count(self, obj):
         """Display the number of posts in this category."""
@@ -56,6 +58,24 @@ class CategoryAdmin(admin.ModelAdmin):
         return count
 
     post_count.short_description = 'Published Posts'
+
+    def icon_preview(self, obj):
+        """Display the category icon."""
+        return format_html(
+            '<i class="bi {}" style="font-size: 1.5rem; color: {};"></i>',
+            obj.icon, obj.color
+        )
+    icon_preview.short_description = 'Icon'
+
+    def color_preview(self, obj):
+        """Display the category color."""
+        return format_html(
+            '<div style="width: 20px; height: 20px; background: {}; border-radius: 4px;"></div>',
+            obj.color
+        )
+    color_preview.short_description = 'Color'
+
+    list_display = ['name', 'slug', 'post_count', 'icon', 'color', 'created_at']
 
 
 @admin.register(Tag)
@@ -104,18 +124,18 @@ class PostAdmin(admin.ModelAdmin):
 
     # List view configuration
     list_display = [
-        'title',
+        'thumbnail_preview',
+        'title_with_link',
         'author',
-        'category',
-        'status',
+        'category_badge',
+        'status_badge',
         'views_count',
-        'created_at',
+        'comment_count',
         'published_at',
-        'thumbnail_preview'
     ]
 
     # Sidebar filters
-    list_filter = ['status', 'category', 'created_at', 'published_at']
+    list_filter = ['status', 'category', 'created_at', 'published_at', 'author']
 
     # Search functionality
     search_fields = ['title', 'content', 'excerpt', 'author__username']
@@ -127,7 +147,7 @@ class PostAdmin(admin.ModelAdmin):
     date_hierarchy = 'published_at'
 
     # Read-only fields (can't be edited)
-    readonly_fields = ['views_count', 'created_at', 'updated_at', 'thumbnail_preview']
+    readonly_fields = ['views_count', 'created_at', 'updated_at', 'thumbnail_preview_large']
 
     # Many-to-many field widget
     filter_horizontal = ['tags']
@@ -138,24 +158,31 @@ class PostAdmin(admin.ModelAdmin):
     # Default ordering in admin
     ordering = ['-created_at']
 
+    # Items per page
+    list_per_page = 20
+
     # Organize fields into sections (fieldsets)
     fieldsets = (
-        ('Content', {
-            'fields': ('title', 'slug', 'content', 'excerpt')
+        ('Post Content', {
+            'fields': ('title', 'slug', 'content', 'excerpt'),
+            'description': 'Enter the main content of your blog post.'
         }),
-        ('Media', {
-            'fields': ('featured_image', 'thumbnail_preview'),
-            'classes': ('collapse',),  # Collapsible section
+        ('Featured Image', {
+            'fields': ('featured_image', 'thumbnail_preview_large'),
+            'description': 'Upload an eye-catching image for your post.'
         }),
-        ('Categorization', {
-            'fields': ('category', 'tags')
+        ('Organization', {
+            'fields': ('category', 'tags'),
+            'description': 'Categorize your post to help readers find it.'
         }),
-        ('Publishing', {
-            'fields': ('author', 'status', 'published_at', 'allow_comments')
+        ('Publishing Options', {
+            'fields': ('author', 'status', 'published_at', 'allow_comments'),
+            'description': 'Control when and how your post appears.'
         }),
-        ('SEO', {
+        ('SEO Settings', {
             'fields': ('meta_description',),
             'classes': ('collapse',),
+            'description': 'Optimize your post for search engines.'
         }),
         ('Statistics', {
             'fields': ('views_count', 'created_at', 'updated_at'),
@@ -163,43 +190,98 @@ class PostAdmin(admin.ModelAdmin):
         }),
     )
 
+    def title_with_link(self, obj):
+        """Display title with link to view on site."""
+        site_url = obj.get_absolute_url()
+        return format_html(
+            '<strong>{}</strong><br>'
+            '<small><a href="{}" target="_blank" style="color: #417690;">View on site →</a></small>',
+            obj.title[:50] + '...' if len(obj.title) > 50 else obj.title,
+            site_url
+        )
+    title_with_link.short_description = 'Title'
+    title_with_link.admin_order_field = 'title'
+
     def thumbnail_preview(self, obj):
-        """Display a thumbnail of the featured image."""
+        """Display a small thumbnail of the featured image."""
         if obj.featured_image:
             return format_html(
-                '<img src="{}" style="max-height: 50px; border-radius: 4px;" />',
+                '<img src="{}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" />',
                 obj.featured_image.url
             )
-        return '-'
+        return format_html(
+            '<div style="width: 60px; height: 40px; background: #f0f0f0; border-radius: 4px; '
+            'display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">No img</div>'
+        )
+    thumbnail_preview.short_description = 'Image'
 
-    thumbnail_preview.short_description = 'Thumbnail'
+    def thumbnail_preview_large(self, obj):
+        """Display a larger thumbnail for the edit form."""
+        if obj.featured_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 8px;" />',
+                obj.featured_image.url
+            )
+        return format_html('<span style="color: #999;">No image uploaded yet</span>')
+    thumbnail_preview_large.short_description = 'Current Image'
+
+    def status_badge(self, obj):
+        """Display status as a colored badge."""
+        colors = {
+            'published': ('#28a745', 'white'),
+            'draft': ('#ffc107', 'black'),
+        }
+        bg_color, text_color = colors.get(obj.status, ('#6c757d', 'white'))
+        return format_html(
+            '<span style="background: {}; color: {}; padding: 3px 10px; border-radius: 12px; '
+            'font-size: 11px; font-weight: 600; text-transform: uppercase;">{}</span>',
+            bg_color, text_color, obj.status
+        )
+    status_badge.short_description = 'Status'
+    status_badge.admin_order_field = 'status'
+
+    def category_badge(self, obj):
+        """Display category as a badge."""
+        if obj.category:
+            return format_html(
+                '<span style="background: #e9ecef; color: #495057; padding: 3px 8px; '
+                'border-radius: 4px; font-size: 12px;">{}</span>',
+                obj.category.name
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    category_badge.short_description = 'Category'
+    category_badge.admin_order_field = 'category'
+
+    def comment_count(self, obj):
+        """Display comment count with icon."""
+        count = obj.comments.filter(is_approved=True).count()
+        return format_html(
+            '<span style="color: #666;">💬 {}</span>',
+            count
+        )
+    comment_count.short_description = 'Comments'
 
     def save_model(self, request, obj, form, change):
-        """
-        Override save_model to set author automatically.
-
-        This is called when admin saves the model.
-        """
-        if not change:  # If creating new post
+        """Set author automatically on create."""
+        if not change:
             obj.author = request.user
         super().save_model(request, obj, form, change)
 
     # Custom actions
     actions = ['make_published', 'make_draft']
 
+    @admin.action(description='✅ Publish selected posts')
     def make_published(self, request, queryset):
         """Bulk action to publish selected posts."""
-        count = queryset.update(status='published')
-        self.message_user(request, f'{count} posts marked as published.')
+        from django.utils import timezone
+        count = queryset.update(status='published', published_at=timezone.now())
+        self.message_user(request, f'✅ {count} posts have been published.')
 
-    make_published.short_description = 'Mark selected posts as published'
-
+    @admin.action(description='📝 Move to drafts')
     def make_draft(self, request, queryset):
         """Bulk action to move posts to draft."""
         count = queryset.update(status='draft')
-        self.message_user(request, f'{count} posts moved to draft.')
-
-    make_draft.short_description = 'Mark selected posts as draft'
+        self.message_user(request, f'📝 {count} posts moved to drafts.')
 
 
 @admin.register(Comment)
@@ -250,7 +332,54 @@ class CommentAdmin(admin.ModelAdmin):
     unapprove_comments.short_description = 'Unapprove selected comments'
 
 
-# Customize the admin site header
-admin.site.site_header = 'Blog CMS Administration'
+# =============================================================================
+# Admin Site Customization
+# =============================================================================
+
+admin.site.site_header = format_html(
+    '<span style="font-weight: 700; letter-spacing: -0.5px;">📝 Blog CMS</span> '
+    '<span style="font-weight: 400; color: #999;">Administration</span>'
+)
 admin.site.site_title = 'Blog CMS Admin'
-admin.site.index_title = 'Welcome to Blog CMS Admin Panel'
+admin.site.index_title = format_html(
+    '<div style="margin-bottom: 10px;">'
+    '<h1 style="font-size: 24px; font-weight: 600; margin: 0;">Welcome to Blog CMS Admin</h1>'
+    '<p style="color: #666; margin: 5px 0 0 0;">Manage your blog posts, categories, tags, and user comments.</p>'
+    '</div>'
+)
+
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    """
+    Admin configuration for Newsletter Subscribers.
+    """
+
+    list_display = ['email', 'is_active', 'is_verified', 'subscribed_at']
+    list_filter = ['is_active', 'is_verified', 'subscribed_at']
+    search_fields = ['email']
+    readonly_fields = ['subscribed_at', 'verified_at']
+    list_editable = ['is_active']
+    ordering = ['-subscribed_at']
+
+    actions = ['activate_subscribers', 'deactivate_subscribers']
+
+    @admin.action(description='Activate selected subscribers')
+    def activate_subscribers(self, request, queryset):
+        count = queryset.update(is_active=True)
+        self.message_user(request, f'{count} subscribers activated.')
+
+    @admin.action(description='Deactivate selected subscribers')
+    def deactivate_subscribers(self, request, queryset):
+        count = queryset.update(is_active=False)
+        self.message_user(request, f'{count} subscribers deactivated.')
+
+
+# Add custom admin CSS
+class CustomAdminMixin:
+    """Mixin to add custom styling to admin."""
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }

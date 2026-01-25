@@ -112,38 +112,37 @@
                             {% endif %}
                         </div>
 
-                        <div class="row">
-                            <!-- Category -->
-                            <div class="col-md-6 mb-4">
-                                <label for="id_category" class="form-label fw-bold">
-                                    <i class="bi bi-folder me-1"></i>Category
-                                </label>
-                                <select name="category" id="id_category" class="form-select">
-                                    <option value="">-- Select Category --</option>
-                                    {% for cat in form.category.field.queryset %}
-                                    <option value="{{ cat.id }}"
-                                            {% if form.category.value == cat.id|stringformat:"s" %}selected{% endif %}>
-                                        {{ cat.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        <!-- Category -->
+                        <div class="mb-4">
+                            <label for="id_category" class="form-label fw-bold">
+                                <i class="bi bi-folder me-1"></i>Category
+                            </label>
+                            <select name="category" id="id_category" class="form-select" style="max-width: 400px;">
+                                <option value="">-- Select Category --</option>
+                                {% for cat in form.category.field.queryset %}
+                                <option value="{{ cat.id }}"
+                                        {% if form.category.value == cat.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                            <!-- Status -->
-                            <div class="col-md-6 mb-4">
-                                <label for="id_status" class="form-label fw-bold">
-                                    <i class="bi bi-toggle-on me-1"></i>Status
-                                </label>
-                                <select name="status" id="id_status" class="form-select">
-                                    <option value="draft" {% if form.status.value == 'draft' %}selected{% endif %}>
-                                        Draft (Not visible)
-                                    </option>
-                                    <option value="published" {% if form.status.value == 'published' %}selected{% endif %}>
-                                        Published (Visible to everyone)
-                                    </option>
-                                </select>
+                        {% if object.status %}
+                        <!-- Current Status (for editing existing posts) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-toggle-on me-1"></i>Current Status
+                            </label>
+                            <div class="alert {% if object.status == 'published' %}alert-success{% else %}alert-warning{% endif %} py-2" style="max-width: 400px;">
+                                {% if object.status == 'published' %}
+                                <i class="bi bi-check-circle me-1"></i> Published
+                                {% else %}
+                                <i class="bi bi-file-earmark me-1"></i> Draft
+                                {% endif %}
                             </div>
                         </div>
+                        {% endif %}
 
                         <!-- Tags -->
                         <div class="mb-4">
@@ -223,14 +222,22 @@
                         </div>
 
                         <!-- Submit Buttons -->
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-check-lg me-1"></i>{{ button_text }}
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" name="action" value="publish" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-1"></i>Publish Now
+                            </button>
+                            <button type="submit" name="action" value="draft" class="btn btn-outline-warning btn-lg">
+                                <i class="bi bi-file-earmark me-1"></i>Save as Draft
                             </button>
                             <a href="{% url 'blog:home' %}" class="btn btn-outline-secondary btn-lg">
                                 <i class="bi bi-x-lg me-1"></i>Cancel
                             </a>
                         </div>
+                        <p class="text-muted small mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Publish Now</strong> makes your post visible to everyone.
+                            <strong>Save as Draft</strong> saves it privately for later editing.
+                        </p>
                     </form>
                 </div>
             </div>
