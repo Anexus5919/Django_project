@@ -1,0 +1,40 @@
+# =============================================================================
+# Django Blogging Platform - Requirements
+# =============================================================================
+# This file lists all Python packages needed for the project.
+# Install with: pip install -r requirements.txt
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# CORE FRAMEWORK
+# -----------------------------------------------------------------------------
+Django>=5.0,<6.0          # The main web framework - handles routing, ORM, admin, etc.
+
+# -----------------------------------------------------------------------------
+# AUTHENTICATION
+# -----------------------------------------------------------------------------
+django-allauth>=0.61.0     # Handles user registration, login, email verification, password reset
+                           # Much more powerful than Django's built-in auth
+
+# -----------------------------------------------------------------------------
+# RICH TEXT EDITOR
+# -----------------------------------------------------------------------------
+django-ckeditor-5>=0.2.10  # WYSIWYG editor for blog posts - allows bold, italic, images, etc.
+
+# -----------------------------------------------------------------------------
+# IMAGE HANDLING
+# -----------------------------------------------------------------------------
+Pillow>=10.0.0             # Python Imaging Library - required for ImageField in Django
+                           # Handles image uploads, resizing, format conversion
+
+# -----------------------------------------------------------------------------
+# FORMS
+# -----------------------------------------------------------------------------
+django-crispy-forms>=2.1   # Makes Django forms look beautiful with minimal effort
+crispy-bootstrap5>=2024.2  # Bootstrap 5 template pack for crispy-forms
+
+# -----------------------------------------------------------------------------
+# DEVELOPMENT TOOLS
+# -----------------------------------------------------------------------------
+python-dotenv>=1.0.0       # Loads environment variables from .env file
+                           # Keeps sensitive data (SECRET_KEY) out of code

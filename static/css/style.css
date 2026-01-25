@@ -1,0 +1,433 @@
+/*
+=============================================================================
+Blog CMS Custom Styles
+=============================================================================
+
+This file contains custom styles that complement Bootstrap 5.
+Bootstrap handles most styling; we just add finishing touches.
+
+Sections:
+    1. Root Variables (CSS Custom Properties)
+    2. Typography
+    3. Layout & Components
+    4. Cards & Hover Effects
+    5. Forms
+    6. Utilities
+    7. Responsive Adjustments
+
+=============================================================================
+*/
+
+/* ==========================================================================
+   1. ROOT VARIABLES
+   ========================================================================== */
+
+:root {
+    /* Color Palette */
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+
+    /* Custom Colors */
+    --bg-light: #f8f9fa;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+
+    /* Fonts */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Merriweather', Georgia, serif;
+
+    /* Shadows */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+
+    /* Transitions */
+    --transition-base: all 0.2s ease-in-out;
+    --transition-slow: all 0.3s ease-in-out;
+}
+
+/* ==========================================================================
+   2. TYPOGRAPHY
+   ========================================================================== */
+
+body {
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+}
+
+/* Display headings */
+.display-1, .display-2, .display-3,
+.display-4, .display-5, .display-6 {
+    font-family: var(--font-heading);
+}
+
+/* Lead text */
+.lead {
+    font-size: 1.15rem;
+    font-weight: 400;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+a:hover {
+    color: #0b5ed7;
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   3. LAYOUT & COMPONENTS
+   ========================================================================== */
+
+/* Navbar enhancements */
+.navbar {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.navbar-brand {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.375rem;
+    transition: var(--transition-base);
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Footer */
+footer a:hover {
+    color: #fff !important;
+}
+
+.hover-light:hover {
+    color: #fff !important;
+}
+
+/* ==========================================================================
+   4. CARDS & HOVER EFFECTS
+   ========================================================================== */
+
+/* Card enhancements */
+.card {
+    border: none;
+    transition: var(--transition-slow);
+}
+
+.card-title a {
+    color: var(--text-dark);
+}
+
+.card-title a:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* Hover lift effect */
+.hover-lift {
+    transition: var(--transition-slow);
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Hover scale effect */
+.hover-scale {
+    transition: var(--transition-slow);
+}
+
+.hover-scale:hover {
+    transform: scale(1.02);
+}
+
+/* Featured image overlay */
+.card-img-overlay-custom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 2rem;
+}
+
+/* ==========================================================================
+   5. FORMS
+   ========================================================================== */
+
+/* Form controls */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Input group styling */
+.input-group-text {
+    background-color: var(--bg-light);
+    border-color: #dee2e6;
+}
+
+/* File input */
+.form-control[type="file"] {
+    padding: 0.5rem;
+}
+
+/* Search form in navbar */
+.navbar .form-control {
+    min-width: 200px;
+}
+
+/* ==========================================================================
+   6. UTILITIES
+   ========================================================================== */
+
+/* Background patterns */
+.bg-pattern {
+    background-color: #f8f9fa;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Text truncate for multiple lines */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Badge styles */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.65em;
+}
+
+/* Breadcrumb */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+}
+
+/* Alert styling */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+/* Pagination */
+.pagination .page-link {
+    border-radius: 0.375rem;
+    margin: 0 0.15rem;
+    border: none;
+    color: var(--text-dark);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* ==========================================================================
+   7. POST CONTENT STYLES
+   ========================================================================== */
+
+.post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.post-content p {
+    margin-bottom: 1.5rem;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+    box-shadow: var(--shadow-md);
+}
+
+.post-content ul,
+.post-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.post-content li {
+    margin-bottom: 0.5rem;
+}
+
+.post-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    background-color: var(--bg-light);
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-style: italic;
+}
+
+.post-content pre {
+    background-color: #282c34;
+    color: #abb2bf;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.post-content code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+}
+
+.post-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* ==========================================================================
+   8. RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+/* Mobile adjustments */
+@media (max-width: 767.98px) {
+    /* Smaller headings on mobile */
+    h1, .h1 { font-size: 1.75rem; }
+    h2, .h2 { font-size: 1.5rem; }
+    h3, .h3 { font-size: 1.25rem; }
+
+    .display-4 { font-size: 2rem; }
+    .display-5 { font-size: 1.75rem; }
+
+    /* Post content */
+    .post-content {
+        font-size: 1rem;
+    }
+
+    /* Navbar search */
+    .navbar .form-control {
+        min-width: 100%;
+    }
+
+    /* Cards */
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container {
+        max-width: 720px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* ==========================================================================
+   9. ANIMATIONS
+   ========================================================================== */
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.4s ease-out;
+}
+
+/* ==========================================================================
+   10. DARK MODE (Optional - CSS Variables make it easy to implement)
+   ========================================================================== */
+
+/* Uncomment to enable dark mode support
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-light: #1a1a2e;
+        --text-dark: #eee;
+        --text-muted: #aaa;
+    }
+
+    body {
+        background-color: #16213e;
+        color: var(--text-dark);
+    }
+
+    .card {
+        background-color: var(--bg-light);
+    }
+
+    .navbar {
+        background-color: #0f3460 !important;
+    }
+}
+*/

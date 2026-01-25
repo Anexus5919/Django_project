@@ -1,0 +1,115 @@
+{% load static %}
+<!--
+=============================================================================
+Sidebar Component
+=============================================================================
+
+Reusable sidebar with:
+    - Search box
+    - Categories list
+    - Tags cloud
+    - Recent comments
+
+=============================================================================
+-->
+
+<!-- Search Widget -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-search me-2"></i>Search
+    </div>
+    <div class="card-body">
+        <form action="{% url 'blog:search' %}" method="GET">
+            <div class="input-group">
+                <input type="search" name="q" class="form-control"
+                       placeholder="Search posts..." value="{{ request.GET.q }}">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Categories Widget -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-folder me-2"></i>Categories
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for category in all_categories %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+                {{ category.name }}
+            </a>
+            <span class="badge bg-primary rounded-pill">{{ category.post_count }}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">No categories yet</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Tags Widget -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-tags me-2"></i>Tags
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            {% for tag in all_tags %}
+            <a href="{{ tag.get_absolute_url }}"
+               class="badge bg-secondary text-decoration-none">
+                {{ tag.name }}
+            </a>
+            {% empty %}
+            <span class="text-muted">No tags yet</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Comments Widget -->
+{% if recent_comments %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-chat-dots me-2"></i>Recent Comments
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for comment in recent_comments %}
+        <li class="list-group-item">
+            <div class="d-flex">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                     style="width: 35px; height: 35px; font-size: 0.8rem;">
+                    {{ comment.author.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <small class="text-muted d-block">
+                        <strong>{{ comment.author.username }}</strong> on
+                        <a href="{{ comment.post.get_absolute_url }}" class="text-decoration-none">
+                            {{ comment.post.title|truncatechars:20 }}
+                        </a>
+                    </small>
+                    <small class="text-muted">{{ comment.content|truncatechars:50 }}</small>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Newsletter Widget (Optional) -->
+<div class="card shadow-sm mb-4 bg-primary text-white">
+    <div class="card-body text-center">
+        <i class="bi bi-envelope-heart fs-1 mb-3"></i>
+        <h5>Subscribe to Newsletter</h5>
+        <p class="small">Get the latest posts delivered to your inbox</p>
+        <form>
+            <div class="input-group">
+                <input type="email" class="form-control" placeholder="Your email">
+                <button class="btn btn-light" type="submit">Subscribe</button>
+            </div>
+        </form>
+    </div>
+</div>

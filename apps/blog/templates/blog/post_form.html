@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ck-editor__editable {
+        min-height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i>{{ title }}
+                </h1>
+                <p class="text-muted">
+                    {% if object %}
+                    Edit your blog post below.
+                    {% else %}
+                    Create a new blog post. Fill in the details below.
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Post Form -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Title -->
+                        <div class="mb-4">
+                            <label for="id_title" class="form-label fw-bold">
+                                <i class="bi bi-type me-1"></i>Title
+                            </label>
+                            <input type="text"
+                                   name="title"
+                                   id="id_title"
+                                   class="form-control form-control-lg {% if form.title.errors %}is-invalid{% endif %}"
+                                   placeholder="Enter your post title"
+                                   value="{{ form.title.value|default:'' }}"
+                                   required>
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content (CKEditor) -->
+                        <div class="mb-4">
+                            <label for="id_content" class="form-label fw-bold">
+                                <i class="bi bi-body-text me-1"></i>Content
+                            </label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                            <div class="text-danger small mt-1">{{ form.content.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <!-- Category -->
+                            <div class="col-md-6 mb-4">
+                                <label for="id_category" class="form-label fw-bold">
+                                    <i class="bi bi-folder me-1"></i>Category
+                                </label>
+                                <select name="category" id="id_category" class="form-select">
+                                    <option value="">-- Select Category --</option>
+                                    {% for cat in form.category.field.queryset %}
+                                    <option value="{{ cat.id }}"
+                                            {% if form.category.value == cat.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-6 mb-4">
+                                <label for="id_status" class="form-label fw-bold">
+                                    <i class="bi bi-toggle-on me-1"></i>Status
+                                </label>
+                                <select name="status" id="id_status" class="form-select">
+                                    <option value="draft" {% if form.status.value == 'draft' %}selected{% endif %}>
+                                        Draft (Not visible)
+                                    </option>
+                                    <option value="published" {% if form.status.value == 'published' %}selected{% endif %}>
+                                        Published (Visible to everyone)
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="mb-4">
+                            <label for="id_tags_input" class="form-label fw-bold">
+                                <i class="bi bi-tags me-1"></i>Tags
+                            </label>
+                            <input type="text"
+                                   name="tags_input"
+                                   id="id_tags_input"
+                                   class="form-control"
+                                   placeholder="python, django, tutorial (comma separated)"
+                                   value="{{ form.tags_input.value|default:'' }}">
+                            <small class="text-muted">Separate tags with commas</small>
+                        </div>
+
+                        <!-- Excerpt -->
+                        <div class="mb-4">
+                            <label for="id_excerpt" class="form-label fw-bold">
+                                <i class="bi bi-card-text me-1"></i>Excerpt (Summary)
+                            </label>
+                            <textarea name="excerpt"
+                                      id="id_excerpt"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Brief summary shown in post listings (optional - auto-generated if empty)">{{ form.excerpt.value|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Featured Image -->
+                        <div class="mb-4">
+                            <label for="id_featured_image" class="form-label fw-bold">
+                                <i class="bi bi-image me-1"></i>Featured Image
+                            </label>
+                            {% if object.featured_image %}
+                            <div class="mb-2">
+                                <img src="{{ object.featured_image.url }}"
+                                     alt="Current image"
+                                     class="img-thumbnail"
+                                     style="max-height: 150px;">
+                                <p class="small text-muted">Current image (upload new to replace)</p>
+                            </div>
+                            {% endif %}
+                            <input type="file"
+                                   name="featured_image"
+                                   id="id_featured_image"
+                                   class="form-control"
+                                   accept="image/*">
+                        </div>
+
+                        <!-- SEO Meta Description -->
+                        <div class="mb-4">
+                            <label for="id_meta_description" class="form-label fw-bold">
+                                <i class="bi bi-search me-1"></i>SEO Description
+                            </label>
+                            <textarea name="meta_description"
+                                      id="id_meta_description"
+                                      class="form-control"
+                                      rows="2"
+                                      maxlength="160"
+                                      placeholder="SEO-friendly description for search engines (max 160 characters)">{{ form.meta_description.value|default:'' }}</textarea>
+                            <small class="text-muted">
+                                <span id="meta-char-count">0</span>/160 characters
+                            </small>
+                        </div>
+
+                        <!-- Allow Comments -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       name="allow_comments"
+                                       id="id_allow_comments"
+                                       class="form-check-input"
+                                       {% if form.allow_comments.value %}checked{% endif %}>
+                                <label for="id_allow_comments" class="form-check-label">
+                                    Allow comments on this post
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg me-1"></i>{{ button_text }}
+                            </button>
+                            <a href="{% url 'blog:home' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-lg me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Writing Tips -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="bi bi-lightbulb me-2"></i>Writing Tips</h6>
+                    <ul class="mb-0 small text-muted">
+                        <li>Use a compelling title that accurately describes your content</li>
+                        <li>Break up long text with headings, lists, and images</li>
+                        <li>Add relevant tags to help readers find your post</li>
+                        <li>Include a featured image to make your post stand out</li>
+                        <li>Save as draft first if you want to review before publishing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Character counter for meta description
+    const metaDesc = document.getElementById('id_meta_description');
+    const charCount = document.getElementById('meta-char-count');
+
+    if (metaDesc && charCount) {
+        charCount.textContent = metaDesc.value.length;
+        metaDesc.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+    }
+</script>
+{% endblock %}

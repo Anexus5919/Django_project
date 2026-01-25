@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Addresses - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Email Addresses</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if emailaddresses %}
+                    <p class="text-muted mb-4">
+                        The following email addresses are associated with your account:
+                    </p>
+
+                    <form method="POST" action="{% url 'account_email' %}">
+                        {% csrf_token %}
+                        <ul class="list-group mb-4">
+                            {% for emailaddress in emailaddresses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <input type="radio" name="email" value="{{ emailaddress.email }}"
+                                           id="email_{{ forloop.counter }}"
+                                           {% if emailaddress.primary %}checked{% endif %}>
+                                    <label for="email_{{ forloop.counter }}" class="ms-2">
+                                        {{ emailaddress.email }}
+                                    </label>
+                                    {% if emailaddress.primary %}
+                                    <span class="badge bg-primary ms-2">Primary</span>
+                                    {% endif %}
+                                    {% if emailaddress.verified %}
+                                    <span class="badge bg-success ms-2">Verified</span>
+                                    {% else %}
+                                    <span class="badge bg-warning ms-2">Unverified</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action_primary" class="btn btn-outline-primary">
+                                Make Primary
+                            </button>
+                            <button type="submit" name="action_send" class="btn btn-outline-secondary">
+                                Re-send Verification
+                            </button>
+                            <button type="submit" name="action_remove" class="btn btn-outline-danger">
+                                Remove
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <p class="text-muted">No email addresses on file.</p>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <h6>Add Email Address</h6>
+                    <form method="POST" action="{% url 'account_email' %}" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="email" name="email" class="form-control"
+                               placeholder="New email address" required>
+                        <button type="submit" name="action_add" class="btn btn-primary">
+                            Add
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
