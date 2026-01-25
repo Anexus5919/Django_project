@@ -1,157 +1,143 @@
 {% extends 'base.html' %}
 {% load static %}
 
-<!--
-=============================================================================
-Home Page Template
-=============================================================================
-
-Features:
-    - Hero section with featured posts
-    - Recent posts grid
-    - Sidebar with categories and tags
-    - Pagination
-
-=============================================================================
--->
-
 {% block title %}{{ site_name }} - Home{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="bg-primary text-white py-5 mb-5">
+<section class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-3">Welcome to {{ site_name }}</h1>
-                <p class="lead mb-4">{{ site_description }}</p>
-                <div class="d-flex gap-3">
-                    <a href="{% url 'blog:post_list' %}" class="btn btn-light btn-lg">
-                        <i class="bi bi-collection me-2"></i>Browse Posts
+            <div class="col-lg-7">
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    Share Your Ideas With The World
+                </h1>
+                <p class="lead text-white-50 mb-4">
+                    {{ site_description|default:"A powerful blogging platform built with Django. Write, share, and connect with readers." }}
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'blog:post_list' %}" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-collection me-2"></i>Explore Posts
                     </a>
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg">
-                        <i class="bi bi-person-plus me-2"></i>Join Us
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg px-4">
+                        Start Writing
+                    </a>
+                    {% else %}
+                    <a href="{% url 'blog:post_create' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-pencil me-2"></i>Write a Post
                     </a>
                     {% endif %}
                 </div>
             </div>
-            <div class="col-lg-6 d-none d-lg-block text-center">
-                <i class="bi bi-journal-richtext" style="font-size: 15rem; opacity: 0.3;"></i>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+                <div class="position-relative">
+                    <i class="bi bi-journal-richtext text-white" style="font-size: 12rem; opacity: 0.2;"></i>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<div class="container">
-    <div class="row">
+<div class="container py-4">
+    <div class="row g-4">
         <!-- Main Content -->
         <div class="col-lg-8">
-            <!-- Featured Posts Carousel -->
+            <!-- Featured Posts -->
             {% if featured_posts %}
             <section class="mb-5">
-                <h2 class="h4 mb-4">
-                    <i class="bi bi-star-fill text-warning me-2"></i>Featured Posts
+                <h2 class="section-title">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    Featured Posts
                 </h2>
-                <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner rounded-4 overflow-hidden shadow">
-                        {% for post in featured_posts %}
-                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <div class="position-relative" style="height: 350px;">
-                                {% if post.featured_image %}
-                                <img src="{{ post.featured_image.url }}"
-                                     class="d-block w-100 h-100"
-                                     style="object-fit: cover;"
-                                     alt="{{ post.title }}">
-                                {% else %}
-                                <div class="bg-secondary d-flex align-items-center justify-content-center h-100">
-                                    <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
-                                </div>
-                                {% endif %}
-                                <div class="carousel-caption bg-dark bg-opacity-75 rounded-3 p-3">
-                                    <h5 class="mb-2">{{ post.title }}</h5>
-                                    <p class="mb-2 d-none d-md-block">{{ post.excerpt|truncatechars:100 }}</p>
-                                    <a href="{{ post.get_absolute_url }}" class="btn btn-primary btn-sm">
-                                        Read More <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                </div>
-            </section>
-            {% endif %}
-
-            <!-- Recent Posts -->
-            <section>
-                <h2 class="h4 mb-4">
-                    <i class="bi bi-clock-history me-2"></i>Recent Posts
-                </h2>
-
-                {% if posts %}
                 <div class="row g-4">
-                    {% for post in posts %}
+                    {% for post in featured_posts|slice:":2" %}
                     <div class="col-md-6">
-                        <article class="card h-100 shadow-sm border-0 hover-lift">
-                            <!-- Post Image -->
+                        <article class="card card-hover-lift h-100">
                             {% if post.featured_image %}
                             <img src="{{ post.featured_image.url }}"
                                  class="card-img-top"
-                                 style="height: 180px; object-fit: cover;"
                                  alt="{{ post.title }}">
                             {% else %}
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
-                                 style="height: 180px;">
-                                <i class="bi bi-file-text text-muted" style="font-size: 3rem;"></i>
+                            <div class="card-img-placeholder">
+                                <i class="bi bi-image" style="font-size: 3rem;"></i>
                             </div>
                             {% endif %}
-
                             <div class="card-body">
-                                <!-- Category Badge -->
                                 {% if post.category %}
                                 <a href="{{ post.category.get_absolute_url }}"
                                    class="badge bg-primary text-decoration-none mb-2">
                                     {{ post.category.name }}
                                 </a>
                                 {% endif %}
-
-                                <!-- Title -->
-                                <h5 class="card-title">
-                                    <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-dark">
-                                        {{ post.title }}
-                                    </a>
-                                </h5>
-
-                                <!-- Excerpt -->
-                                <p class="card-text text-muted small">
-                                    {{ post.excerpt|truncatechars:100 }}
-                                </p>
+                                <h3 class="card-title h5">
+                                    <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                                </h3>
+                                <p class="card-text">{{ post.excerpt|truncatechars:100 }}</p>
                             </div>
-
-                            <div class="card-footer bg-transparent border-0">
+                            <div class="card-footer">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <!-- Author -->
                                     <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
-                                             style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                        <div class="avatar-initials me-2" style="width: 28px; height: 28px; font-size: 0.75rem;">
                                             {{ post.author.username|slice:":1"|upper }}
                                         </div>
                                         <small class="text-muted">{{ post.author.username }}</small>
                                     </div>
-
-                                    <!-- Date -->
                                     <small class="text-muted">
-                                        <i class="bi bi-calendar3 me-1"></i>
-                                        {{ post.published_at|date:"M d, Y" }}
+                                        {{ post.published_at|date:"M d" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Recent Posts -->
+            <section>
+                <h2 class="section-title">
+                    <i class="bi bi-clock-history"></i>
+                    Recent Posts
+                </h2>
+
+                {% if posts %}
+                <div class="row g-4">
+                    {% for post in posts %}
+                    <div class="col-md-6">
+                        <article class="card card-hover-lift h-100">
+                            {% if post.featured_image %}
+                            <img src="{{ post.featured_image.url }}"
+                                 class="card-img-top"
+                                 alt="{{ post.title }}">
+                            {% else %}
+                            <div class="card-img-placeholder">
+                                <i class="bi bi-file-earmark-text" style="font-size: 2.5rem;"></i>
+                            </div>
+                            {% endif %}
+                            <div class="card-body">
+                                {% if post.category %}
+                                <a href="{{ post.category.get_absolute_url }}"
+                                   class="badge bg-primary text-decoration-none mb-2">
+                                    {{ post.category.name }}
+                                </a>
+                                {% endif %}
+                                <h3 class="card-title h5">
+                                    <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                                </h3>
+                                <p class="card-text">{{ post.excerpt|truncatechars:100 }}</p>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-initials me-2" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                            {{ post.author.username|slice:":1"|upper }}
+                                        </div>
+                                        <small class="text-muted">{{ post.author.username }}</small>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-eye me-1"></i>{{ post.views_count }}
                                     </small>
                                 </div>
                             </div>
@@ -167,7 +153,7 @@ Features:
                         {% if page_obj.has_previous %}
                         <li class="page-item">
                             <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                                <i class="bi bi-chevron-left"></i> Previous
+                                <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         {% endif %}
@@ -187,7 +173,7 @@ Features:
                         {% if page_obj.has_next %}
                         <li class="page-item">
                             <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                                Next <i class="bi bi-chevron-right"></i>
+                                <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
                         {% endif %}
@@ -196,22 +182,28 @@ Features:
                 {% endif %}
 
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-journal-x text-muted" style="font-size: 4rem;"></i>
-                    <h3 class="mt-3">No Posts Yet</h3>
-                    <p class="text-muted">Be the first to share your thoughts!</p>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'blog:post_create' %}" class="btn btn-primary">
-                        <i class="bi bi-plus-lg me-2"></i>Create First Post
-                    </a>
-                    {% endif %}
+                <div class="empty-state card">
+                    <div class="card-body py-5">
+                        <i class="bi bi-journal-x d-block"></i>
+                        <h3>No Posts Yet</h3>
+                        <p>Be the first to share your thoughts with the community!</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'blog:post_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Create Your First Post
+                        </a>
+                        {% else %}
+                        <a href="{% url 'account_signup' %}" class="btn btn-primary">
+                            Get Started
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endif %}
             </section>
         </div>
 
         <!-- Sidebar -->
-        <div class="col-lg-4">
+        <div class="col-lg-4 sidebar">
             {% include 'includes/sidebar.html' %}
         </div>
     </div>

@@ -1,47 +1,44 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
 
-<!--
-=============================================================================
-Login Page Template (django-allauth)
-=============================================================================
-
-This overrides allauth's default login template.
-allauth provides the form, we just style it with Bootstrap.
-
-Form fields available:
-    - login (email/username based on settings)
-    - password
-    - remember me checkbox
-
-=============================================================================
--->
-
-{% block title %}Login - {{ site_name }}{% endblock %}
+{% block title %}Sign In - {{ site_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow border-0">
-                <div class="card-body p-5">
-                    <!-- Header -->
-                    <div class="text-center mb-4">
-                        <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-3">Welcome Back</h2>
-                        <p class="text-muted">Sign in to your account</p>
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="auth-card">
+                    <!-- Logo/Icon -->
+                    <div class="auth-icon">
+                        <i class="bi bi-person-circle"></i>
                     </div>
 
+                    <!-- Header -->
+                    <div class="auth-header">
+                        <h1>Welcome Back</h1>
+                        <p>Sign in to continue to {{ site_name|default:"BlogCMS" }}</p>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Invalid email or password. Please try again.
+                    </div>
+                    {% endif %}
+
                     <!-- Login Form -->
-                    <form method="POST" action="{% url 'account_login' %}">
+                    <form method="POST" action="{% url 'account_login' %}" class="auth-form">
                         {% csrf_token %}
 
-                        <!-- Email/Username Field -->
-                        <div class="mb-3">
+                        <!-- Email Field -->
+                        <div class="form-group">
                             <label for="id_login" class="form-label">Email Address</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
                                 <input type="email"
                                        name="login"
                                        id="id_login"
@@ -53,49 +50,202 @@ Form fields available:
                         </div>
 
                         <!-- Password Field -->
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Password</label>
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="id_password" class="form-label">Password</label>
+                                <a href="{% url 'account_reset_password' %}" class="forgot-link">
+                                    Forgot password?
+                                </a>
+                            </div>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
                                 <input type="password"
                                        name="password"
                                        id="id_password"
                                        class="form-control"
-                                       placeholder="Your password"
+                                       placeholder="Enter your password"
                                        required>
+                                <button type="button" class="input-group-text toggle-password" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Remember Me & Forgot Password -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="form-check">
-                                <input type="checkbox" name="remember" id="id_remember" class="form-check-input">
-                                <label for="id_remember" class="form-check-label">Remember me</label>
-                            </div>
-                            <a href="{% url 'account_reset_password' %}" class="text-decoration-none small">
-                                Forgot password?
-                            </a>
+                        <!-- Remember Me -->
+                        <div class="form-check mb-4">
+                            <input type="checkbox" name="remember" id="id_remember" class="form-check-input">
+                            <label for="id_remember" class="form-check-label">
+                                Keep me signed in
+                            </label>
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Sign In
                         </button>
                     </form>
 
                     <!-- Divider -->
-                    <hr class="my-4">
+                    <div class="auth-divider">
+                        <span>New to {{ site_name|default:"BlogCMS" }}?</span>
+                    </div>
 
                     <!-- Register Link -->
-                    <p class="text-center mb-0">
-                        Don't have an account?
-                        <a href="{% url 'account_signup' %}" class="text-decoration-none fw-bold">
-                            Sign up
-                        </a>
-                    </p>
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline-primary w-100">
+                        Create an Account
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .auth-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .auth-icon i {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .auth-form .form-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-form .input-group-text {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-500);
+    }
+
+    .auth-form .form-control {
+        border-left: 0;
+    }
+
+    .auth-form .form-control:focus {
+        border-color: var(--gray-300);
+        box-shadow: none;
+    }
+
+    .auth-form .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        border-radius: var(--radius);
+    }
+
+    .auth-form .input-group:focus-within .input-group-text,
+    .auth-form .input-group:focus-within .form-control {
+        border-color: var(--primary);
+    }
+
+    .forgot-link {
+        font-size: 0.8125rem;
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .toggle-password {
+        cursor: pointer;
+        border-left: 0;
+        background: var(--gray-50);
+    }
+
+    .auth-divider {
+        position: relative;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+
+    .auth-divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gray-200);
+    }
+
+    .auth-divider span {
+        position: relative;
+        background: white;
+        padding: 0 1rem;
+        color: var(--gray-500);
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.closest('.input-group').querySelector('input');
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -1,75 +1,107 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Sign Up - {{ site_name }}{% endblock %}
+{% block title %}Create Account - {{ site_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow border-0">
-                <div class="card-body p-5">
-                    <!-- Header -->
-                    <div class="text-center mb-4">
-                        <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-3">Create Account</h2>
-                        <p class="text-muted">Join our community of writers</p>
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <!-- Logo/Icon -->
+                    <div class="auth-icon">
+                        <i class="bi bi-person-plus"></i>
                     </div>
 
+                    <!-- Header -->
+                    <div class="auth-header">
+                        <h1>Create Account</h1>
+                        <p>Join our community of writers and readers</p>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                     <!-- Registration Form -->
-                    <form method="POST" action="{% url 'account_signup' %}">
+                    <form method="POST" action="{% url 'account_signup' %}" class="auth-form">
                         {% csrf_token %}
 
                         <!-- Username -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="id_username" class="form-label">Username</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-at"></i>
+                                </span>
                                 <input type="text"
                                        name="username"
                                        id="id_username"
                                        class="form-control"
                                        placeholder="Choose a username"
+                                       value="{{ form.username.value|default:'' }}"
                                        required
                                        autofocus>
                             </div>
-                            <small class="text-muted">Letters, numbers, and underscores only</small>
+                            <small class="form-text">Letters, numbers, and underscores only</small>
                         </div>
 
                         <!-- Email -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="id_email" class="form-label">Email Address</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
                                 <input type="email"
                                        name="email"
                                        id="id_email"
                                        class="form-control"
                                        placeholder="you@example.com"
+                                       value="{{ form.email.value|default:'' }}"
                                        required>
                             </div>
                         </div>
 
                         <!-- Password -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="id_password1" class="form-label">Password</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
                                 <input type="password"
                                        name="password1"
                                        id="id_password1"
                                        class="form-control"
                                        placeholder="Create a strong password"
                                        required>
+                                <button type="button" class="input-group-text toggle-password" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
-                            <small class="text-muted">At least 8 characters</small>
+                            <small class="form-text">At least 8 characters</small>
                         </div>
 
                         <!-- Confirm Password -->
-                        <div class="mb-4">
+                        <div class="form-group">
                             <label for="id_password2" class="form-label">Confirm Password</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                <span class="input-group-text">
+                                    <i class="bi bi-shield-check"></i>
+                                </span>
                                 <input type="password"
                                        name="password2"
                                        id="id_password2"
@@ -79,29 +111,176 @@
                             </div>
                         </div>
 
+                        <!-- Terms Agreement -->
+                        <div class="form-check mb-4">
+                            <input type="checkbox" id="terms" class="form-check-input" required>
+                            <label for="terms" class="form-check-label">
+                                I agree to the <a href="#" class="text-primary">Terms of Service</a>
+                                and <a href="#" class="text-primary">Privacy Policy</a>
+                            </label>
+                        </div>
+
                         <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">
-                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Create Account
                         </button>
                     </form>
 
-                    <!-- Terms -->
-                    <p class="text-muted text-center small mt-3">
-                        By signing up, you agree to our Terms of Service and Privacy Policy.
-                    </p>
-
-                    <hr class="my-4">
+                    <!-- Divider -->
+                    <div class="auth-divider">
+                        <span>Already have an account?</span>
+                    </div>
 
                     <!-- Login Link -->
-                    <p class="text-center mb-0">
-                        Already have an account?
-                        <a href="{% url 'account_login' %}" class="text-decoration-none fw-bold">
-                            Sign in
-                        </a>
-                    </p>
+                    <a href="{% url 'account_login' %}" class="btn btn-outline-primary w-100">
+                        Sign In
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .auth-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .auth-icon i {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .auth-form .form-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-form .form-text {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        margin-top: 0.25rem;
+    }
+
+    .auth-form .input-group-text {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-500);
+    }
+
+    .auth-form .form-control {
+        border-left: 0;
+    }
+
+    .auth-form .form-control:focus {
+        border-color: var(--gray-300);
+        box-shadow: none;
+    }
+
+    .auth-form .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        border-radius: var(--radius);
+    }
+
+    .auth-form .input-group:focus-within .input-group-text,
+    .auth-form .input-group:focus-within .form-control {
+        border-color: var(--primary);
+    }
+
+    .toggle-password {
+        cursor: pointer;
+        border-left: 0;
+        background: var(--gray-50);
+    }
+
+    .auth-divider {
+        position: relative;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+
+    .auth-divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gray-200);
+    }
+
+    .auth-divider span {
+        position: relative;
+        background: white;
+        padding: 0 1rem;
+        color: var(--gray-500);
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.closest('.input-group').querySelector('input');
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    });
+</script>
 {% endblock %}

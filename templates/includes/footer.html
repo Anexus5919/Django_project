@@ -1,133 +1,139 @@
 {% load static %}
-<!--
+{% comment %}
 =============================================================================
-Footer Component
+Footer Component - Modern Professional Design
 =============================================================================
 
 Responsive footer with:
-    - About section
+    - Brand section
     - Quick links
     - Categories
     - Social links
     - Copyright
 
 =============================================================================
--->
+{% endcomment %}
 
-<footer class="bg-dark text-light py-5 mt-5">
-    <div class="container">
-        <div class="row g-4">
-            <!-- About Section -->
-            <div class="col-lg-4 col-md-6">
-                <h5 class="fw-bold mb-3">
-                    <i class="bi bi-journal-richtext me-2"></i>{{ site_name }}
-                </h5>
-                <p class="text-muted">
-                    {{ site_description }}
-                </p>
-                <!-- Social Links -->
-                <div class="d-flex gap-3 mt-3">
-                    <a href="{{ social_links.twitter }}" class="text-light fs-5" target="_blank" rel="noopener">
-                        <i class="bi bi-twitter-x"></i>
-                    </a>
-                    <a href="{{ social_links.github }}" class="text-light fs-5" target="_blank" rel="noopener">
-                        <i class="bi bi-github"></i>
-                    </a>
-                    <a href="{{ social_links.linkedin }}" class="text-light fs-5" target="_blank" rel="noopener">
-                        <i class="bi bi-linkedin"></i>
-                    </a>
+<footer class="site-footer">
+    <div class="footer-main">
+        <div class="container">
+            <div class="row g-4 g-lg-5">
+                <!-- Brand Section -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-brand mb-3">
+                        <i class="bi bi-journal-richtext"></i>
+                        <span>{{ site_name|default:"BlogCMS" }}</span>
+                    </div>
+                    <p class="footer-description mb-4">
+                        {{ site_description|default:"A modern blogging platform where ideas come to life. Share your stories, connect with readers, and build your audience." }}
+                    </p>
+                    <!-- Social Links -->
+                    <div class="footer-social">
+                        <a href="#" class="social-link" title="Twitter">
+                            <i class="bi bi-twitter-x"></i>
+                        </a>
+                        <a href="#" class="social-link" title="GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="#" class="social-link" title="LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Instagram">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Quick Links -->
-            <div class="col-lg-2 col-md-6">
-                <h6 class="fw-bold mb-3 text-uppercase">Quick Links</h6>
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <a href="{% url 'blog:home' %}" class="text-muted text-decoration-none hover-light">
-                            Home
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'blog:post_list' %}" class="text-muted text-decoration-none hover-light">
-                            Blog
-                        </a>
-                    </li>
-                    {% if user.is_authenticated %}
-                    <li class="mb-2">
-                        <a href="{% url 'blog:post_create' %}" class="text-muted text-decoration-none hover-light">
-                            Write Post
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'accounts:profile' %}" class="text-muted text-decoration-none hover-light">
-                            Profile
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="mb-2">
-                        <a href="{% url 'account_login' %}" class="text-muted text-decoration-none hover-light">
-                            Login
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'account_signup' %}" class="text-muted text-decoration-none hover-light">
-                            Register
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6 class="footer-heading">Quick Links</h6>
+                    <ul class="footer-links">
+                        <li>
+                            <a href="{% url 'blog:home' %}">
+                                <i class="bi bi-chevron-right"></i>Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'blog:post_list' %}">
+                                <i class="bi bi-chevron-right"></i>Blog
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li>
+                            <a href="{% url 'blog:post_create' %}">
+                                <i class="bi bi-chevron-right"></i>Write Post
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-chevron-right"></i>My Profile
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="{% url 'account_login' %}">
+                                <i class="bi bi-chevron-right"></i>Sign In
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'account_signup' %}">
+                                <i class="bi bi-chevron-right"></i>Register
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
 
-            <!-- Categories -->
-            <div class="col-lg-3 col-md-6">
-                <h6 class="fw-bold mb-3 text-uppercase">Categories</h6>
-                <ul class="list-unstyled">
-                    {% for category in all_categories|slice:":5" %}
-                    <li class="mb-2">
-                        <a href="{{ category.get_absolute_url }}" class="text-muted text-decoration-none hover-light">
-                            {{ category.name }}
-                        </a>
-                    </li>
-                    {% empty %}
-                    <li class="text-muted">No categories yet</li>
-                    {% endfor %}
-                </ul>
-            </div>
+                <!-- Categories -->
+                <div class="col-lg-3 col-md-6 col-6">
+                    <h6 class="footer-heading">Categories</h6>
+                    <ul class="footer-links">
+                        {% for category in all_categories|slice:":5" %}
+                        <li>
+                            <a href="{{ category.get_absolute_url }}">
+                                <i class="bi bi-chevron-right"></i>{{ category.name }}
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="text-muted-footer">No categories yet</li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
-            <!-- Tags Cloud -->
-            <div class="col-lg-3 col-md-6">
-                <h6 class="fw-bold mb-3 text-uppercase">Popular Tags</h6>
-                <div class="d-flex flex-wrap gap-2">
-                    {% for tag in all_tags|slice:":10" %}
-                    <a href="{{ tag.get_absolute_url }}"
-                       class="badge bg-secondary text-decoration-none">
-                        {{ tag.name }}
-                    </a>
-                    {% empty %}
-                    <span class="text-muted">No tags yet</span>
-                    {% endfor %}
+                <!-- Tags Cloud -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Popular Tags</h6>
+                    <div class="footer-tags">
+                        {% for tag in all_tags|slice:":8" %}
+                        <a href="{{ tag.get_absolute_url }}" class="footer-tag">
+                            {{ tag.name }}
+                        </a>
+                        {% empty %}
+                        <span class="text-muted-footer">No tags yet</span>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Divider -->
-        <hr class="my-4 border-secondary">
-
-        <!-- Copyright -->
-        <div class="row align-items-center">
-            <div class="col-md-6 text-center text-md-start">
-                <p class="mb-0 text-muted">
-                    &copy; {{ site_year }} {{ site_name }}. All rights reserved.
-                </p>
-            </div>
-            <div class="col-md-6 text-center text-md-end">
-                <p class="mb-0 text-muted">
-                    Built with <i class="bi bi-heart-fill text-danger"></i> using
-                    <a href="https://www.djangoproject.com/" class="text-muted" target="_blank" rel="noopener">
-                        Django
-                    </a>
-                </p>
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">
+                        &copy; {% now "Y" %} {{ site_name|default:"BlogCMS" }}. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0">
+                        Crafted with <i class="bi bi-heart-fill text-danger"></i> using
+                        <a href="https://www.djangoproject.com/" target="_blank" rel="noopener">Django</a>
+                        &
+                        <a href="https://getbootstrap.com/" target="_blank" rel="noopener">Bootstrap</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

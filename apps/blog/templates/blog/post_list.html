@@ -4,91 +4,96 @@
 {% block title %}Blog Posts - {{ site_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Page Header -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <h1 class="display-5 fw-bold">
-                <i class="bi bi-collection me-2"></i>All Blog Posts
+<!-- Page Header -->
+<div class="page-header-section">
+    <div class="container">
+        <div class="page-header-content">
+            <h1 class="page-title">
+                <i class="bi bi-collection"></i>
+                Blog Posts
             </h1>
-            <p class="lead text-muted">
-                Discover our latest articles and insights
+            <p class="page-subtitle">
+                Discover our latest articles, tutorials, and insights
             </p>
         </div>
     </div>
+</div>
 
-    <div class="row">
+<div class="container py-5">
+    <div class="row g-4 g-lg-5">
         <!-- Main Content -->
         <div class="col-lg-8">
             {% if posts %}
             <div class="row g-4">
                 {% for post in posts %}
                 <div class="col-md-6">
-                    <article class="card h-100 shadow-sm border-0 hover-lift">
+                    <article class="card card-hover-lift h-100">
                         <!-- Post Image -->
                         {% if post.featured_image %}
-                        <img src="{{ post.featured_image.url }}"
-                             class="card-img-top"
-                             style="height: 200px; object-fit: cover;"
-                             alt="{{ post.title }}">
+                        <div class="card-img-wrapper">
+                            <img src="{{ post.featured_image.url }}"
+                                 class="card-img-top"
+                                 alt="{{ post.title }}">
+                            {% if post.category %}
+                            <a href="{{ post.category.get_absolute_url }}" class="card-category-badge">
+                                {{ post.category.name }}
+                            </a>
+                            {% endif %}
+                        </div>
                         {% else %}
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
-                             style="height: 200px;">
-                            <i class="bi bi-file-text text-muted" style="font-size: 3rem;"></i>
+                        <div class="card-img-placeholder">
+                            <i class="bi bi-file-earmark-text"></i>
+                            {% if post.category %}
+                            <a href="{{ post.category.get_absolute_url }}" class="card-category-badge">
+                                {{ post.category.name }}
+                            </a>
+                            {% endif %}
                         </div>
                         {% endif %}
 
                         <div class="card-body">
-                            <!-- Category Badge -->
-                            {% if post.category %}
-                            <a href="{{ post.category.get_absolute_url }}"
-                               class="badge bg-primary text-decoration-none mb-2">
-                                {{ post.category.name }}
-                            </a>
-                            {% endif %}
-
                             <!-- Title -->
-                            <h5 class="card-title">
-                                <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-dark">
+                            <h3 class="card-title h5">
+                                <a href="{{ post.get_absolute_url }}">
                                     {{ post.title }}
                                 </a>
-                            </h5>
+                            </h3>
 
                             <!-- Excerpt -->
-                            <p class="card-text text-muted">
-                                {{ post.excerpt|truncatechars:120 }}
+                            <p class="card-text">
+                                {{ post.excerpt|truncatechars:100 }}
                             </p>
 
                             <!-- Tags -->
                             {% if post.tags.all %}
-                            <div class="mb-2">
+                            <div class="card-tags">
                                 {% for tag in post.tags.all|slice:":3" %}
-                                <a href="{{ tag.get_absolute_url }}"
-                                   class="badge bg-light text-secondary text-decoration-none">
-                                    #{{ tag.name }}
+                                <a href="{{ tag.get_absolute_url }}" class="card-tag">
+                                    {{ tag.name }}
                                 </a>
                                 {% endfor %}
                             </div>
                             {% endif %}
                         </div>
 
-                        <div class="card-footer bg-transparent">
+                        <div class="card-footer">
                             <div class="d-flex justify-content-between align-items-center">
                                 <!-- Author & Date -->
-                                <div class="d-flex align-items-center">
-                                    <small class="text-muted">
-                                        <i class="bi bi-person me-1"></i>{{ post.author.username }}
-                                    </small>
-                                    <span class="mx-2 text-muted">|</span>
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar3 me-1"></i>{{ post.published_at|date:"M d" }}
-                                    </small>
+                                <div class="card-meta">
+                                    <div class="avatar-initials me-2" style="width: 28px; height: 28px; font-size: 0.7rem;">
+                                        {{ post.author.username|slice:":1"|upper }}
+                                    </div>
+                                    <div class="meta-text">
+                                        <span class="meta-author">{{ post.author.username }}</span>
+                                        <span class="meta-date">{{ post.published_at|date:"M d, Y" }}</span>
+                                    </div>
                                 </div>
 
-                                <!-- Read More -->
-                                <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
-                                    Read <i class="bi bi-arrow-right"></i>
-                                </a>
+                                <!-- Stats -->
+                                <div class="card-stats">
+                                    <span><i class="bi bi-eye"></i> {{ post.views_count }}</span>
+                                    <span><i class="bi bi-chat"></i> {{ post.comments.count }}</span>
+                                </div>
                             </div>
                         </div>
                     </article>
@@ -103,7 +108,7 @@
                     {% if page_obj.has_previous %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                            <i class="bi bi-chevron-left"></i> Previous
+                            <i class="bi bi-chevron-left me-1"></i>Previous
                         </a>
                     </li>
                     {% endif %}
@@ -123,7 +128,7 @@
                     {% if page_obj.has_next %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                            Next <i class="bi bi-chevron-right"></i>
+                            Next<i class="bi bi-chevron-right ms-1"></i>
                         </a>
                     </li>
                     {% endif %}
@@ -132,18 +137,203 @@
             {% endif %}
 
             {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-journal-x text-muted" style="font-size: 5rem;"></i>
-                <h3 class="mt-3">No Posts Found</h3>
-                <p class="text-muted">Check back later for new content!</p>
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-journal-x"></i>
+                </div>
+                <h3>No Posts Found</h3>
+                <p>We haven't published any posts yet. Check back soon!</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'blog:post_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Create First Post
+                </a>
+                {% endif %}
             </div>
             {% endif %}
         </div>
 
         <!-- Sidebar -->
-        <div class="col-lg-4">
+        <div class="col-lg-4 sidebar">
             {% include 'includes/sidebar.html' %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Header Section */
+    .page-header-section {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 3rem 0;
+        margin-bottom: 0;
+    }
+
+    .page-header-content {
+        color: white;
+    }
+
+    .page-title {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-title i {
+        opacity: 0.8;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+    }
+
+    /* Card Image Wrapper */
+    .card-img-wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-img-wrapper .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover .card-img-wrapper .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .card-category-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        padding: 0.375rem 0.875rem;
+        background: var(--primary);
+        color: white;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        transition: var(--transition);
+    }
+
+    .card-category-badge:hover {
+        background: var(--primary-dark);
+        color: white;
+    }
+
+    .card-img-placeholder {
+        position: relative;
+    }
+
+    .card-img-placeholder .card-category-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+    }
+
+    /* Card Tags */
+    .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin-top: 0.75rem;
+    }
+
+    .card-tag {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        background: var(--gray-100);
+        color: var(--gray-600);
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .card-tag:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Card Meta */
+    .card-meta {
+        display: flex;
+        align-items: center;
+    }
+
+    .meta-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+
+    .meta-author {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .meta-date {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+    }
+
+    .card-stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 4rem 2rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+    }
+
+    .empty-state-icon {
+        width: 100px;
+        height: 100px;
+        background: var(--gray-100);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-state-icon i {
+        font-size: 3rem;
+        color: var(--gray-400);
+    }
+
+    .empty-state h3 {
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--gray-500);
+        margin-bottom: 1.5rem;
+    }
+</style>
 {% endblock %}

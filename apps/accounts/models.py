@@ -61,7 +61,6 @@ class UserProfile(models.Model):
         upload_to='avatars/',
         blank=True,
         null=True,
-        default='avatars/default.png',  # Default avatar
         help_text="Profile picture (recommended: 200x200 pixels)"
     )
 

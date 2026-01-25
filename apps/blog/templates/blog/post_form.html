@@ -5,9 +5,57 @@
 {% block title %}{{ title }} - {{ site_name }}{% endblock %}
 
 {% block extra_css %}
+{{ form.media.css }}
 <style>
+    /* CKEditor Container Styling */
     .ck-editor__editable {
-        min-height: 400px;
+        min-height: 400px !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .ck.ck-editor {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .ck.ck-editor__main > .ck-editor__editable {
+        background: var(--bs-body-bg) !important;
+        border-color: #dee2e6 !important;
+    }
+
+    .ck.ck-toolbar {
+        background: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+    }
+
+    /* Form card styling */
+    .form-card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+    }
+
+    /* Page header */
+    .page-header {
+        padding: 2rem 0;
+        margin-bottom: 1rem;
+    }
+
+    .page-header h1 {
+        color: #1a202c;
+        font-weight: 700;
     }
 </style>
 {% endblock %}
@@ -206,6 +254,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ form.media.js }}
 <script>
     // Character counter for meta description
     const metaDesc = document.getElementById('id_meta_description');
@@ -217,5 +266,15 @@
             charCount.textContent = this.value.length;
         });
     }
+
+    // Enhance form validation feedback
+    document.querySelectorAll('.form-control, .form-select').forEach(function(input) {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() !== '') {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
 </script>
 {% endblock %}

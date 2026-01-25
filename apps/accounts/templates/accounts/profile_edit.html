@@ -1,149 +1,184 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Edit Profile - {{ site_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow border-0">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-person-gear me-2"></i>Edit Profile
-                    </h5>
+<div class="settings-page">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Page Header -->
+                <div class="settings-header mb-4">
+                    <h1><i class="bi bi-gear me-2"></i>Settings</h1>
+                    <p>Manage your account and profile settings</p>
                 </div>
-                <div class="card-body p-4">
-                    <form method="POST" enctype="multipart/form-data">
+
+                <!-- Settings Card -->
+                <div class="settings-card">
+                    <form method="POST" enctype="multipart/form-data" class="settings-form">
                         {% csrf_token %}
 
-                        <!-- Personal Information -->
-                        <h6 class="fw-bold mb-3 text-primary">
-                            <i class="bi bi-person me-2"></i>Personal Information
-                        </h6>
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3">
-                                <label for="id_first_name" class="form-label">First Name</label>
-                                <input type="text" name="first_name" id="id_first_name"
-                                       class="form-control" value="{{ user.first_name }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="id_last_name" class="form-label">Last Name</label>
-                                <input type="text" name="last_name" id="id_last_name"
-                                       class="form-control" value="{{ user.last_name }}">
-                            </div>
-                            <div class="col-12">
-                                <label for="id_email" class="form-label">Email Address</label>
-                                <input type="email" name="email" id="id_email"
-                                       class="form-control" value="{{ user.email }}">
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Profile Picture -->
-                        <h6 class="fw-bold mb-3 text-primary">
-                            <i class="bi bi-image me-2"></i>Profile Picture
-                        </h6>
-                        <div class="mb-4">
-                            {% if user.profile.avatar %}
-                            <div class="mb-3">
-                                <img src="{{ user.profile.avatar.url }}"
-                                     class="rounded-circle"
-                                     style="width: 100px; height: 100px; object-fit: cover;"
-                                     alt="Current avatar">
-                            </div>
-                            {% endif %}
-                            <input type="file" name="avatar" class="form-control" accept="image/*">
-                            <small class="text-muted">Recommended: Square image, at least 200x200 pixels</small>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- About -->
-                        <h6 class="fw-bold mb-3 text-primary">
-                            <i class="bi bi-card-text me-2"></i>About You
-                        </h6>
-                        <div class="mb-3">
-                            <label for="id_bio" class="form-label">Bio</label>
-                            <textarea name="bio" id="id_bio" class="form-control" rows="4"
-                                      placeholder="Tell us about yourself...">{{ user.profile.bio }}</textarea>
-                        </div>
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3">
-                                <label for="id_location" class="form-label">Location</label>
-                                <input type="text" name="location" id="id_location"
-                                       class="form-control" value="{{ user.profile.location }}"
-                                       placeholder="City, Country">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="id_website" class="form-label">Website</label>
-                                <input type="url" name="website" id="id_website"
-                                       class="form-control" value="{{ user.profile.website }}"
-                                       placeholder="https://yourwebsite.com">
+                        <!-- Profile Picture Section -->
+                        <div class="settings-section">
+                            <h5 class="section-heading">
+                                <i class="bi bi-person-circle"></i>
+                                Profile Picture
+                            </h5>
+                            <div class="avatar-upload">
+                                <div class="current-avatar">
+                                    {% if user.profile.avatar and user.profile.avatar.name %}
+                                    <img src="{{ user.profile.avatar.url }}"
+                                         alt="{{ user.username }}"
+                                         id="avatar-preview">
+                                    {% else %}
+                                    <div class="avatar-initials" id="avatar-preview">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="upload-actions">
+                                    <label class="btn btn-outline-primary btn-sm" for="id_avatar">
+                                        <i class="bi bi-upload me-1"></i>Upload Photo
+                                    </label>
+                                    <input type="file" name="avatar" id="id_avatar"
+                                           class="d-none" accept="image/*">
+                                    <p class="upload-hint">JPG, PNG or GIF. Max 2MB.</p>
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4">
-
-                        <!-- Social Links -->
-                        <h6 class="fw-bold mb-3 text-primary">
-                            <i class="bi bi-share me-2"></i>Social Links
-                        </h6>
-                        <div class="row mb-4">
-                            <div class="col-md-4 mb-3">
-                                <label for="id_twitter" class="form-label">
-                                    <i class="bi bi-twitter-x me-1"></i>Twitter
-                                </label>
-                                <input type="text" name="twitter" id="id_twitter"
-                                       class="form-control" value="{{ user.profile.twitter }}"
-                                       placeholder="username">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="id_github" class="form-label">
-                                    <i class="bi bi-github me-1"></i>GitHub
-                                </label>
-                                <input type="text" name="github" id="id_github"
-                                       class="form-control" value="{{ user.profile.github }}"
-                                       placeholder="username">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="id_linkedin" class="form-label">
-                                    <i class="bi bi-linkedin me-1"></i>LinkedIn
-                                </label>
-                                <input type="text" name="linkedin" id="id_linkedin"
-                                       class="form-control" value="{{ user.profile.linkedin }}"
-                                       placeholder="username">
+                        <!-- Personal Info Section -->
+                        <div class="settings-section">
+                            <h5 class="section-heading">
+                                <i class="bi bi-person"></i>
+                                Personal Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="id_first_name" class="form-label">First Name</label>
+                                    <input type="text" name="first_name" id="id_first_name"
+                                           class="form-control" value="{{ user.first_name }}"
+                                           placeholder="John">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_last_name" class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" id="id_last_name"
+                                           class="form-control" value="{{ user.last_name }}"
+                                           placeholder="Doe">
+                                </div>
+                                <div class="col-12">
+                                    <label for="id_email" class="form-label">Email Address</label>
+                                    <input type="email" name="email" id="id_email"
+                                           class="form-control" value="{{ user.email }}"
+                                           placeholder="john@example.com">
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-4">
-
-                        <!-- Settings -->
-                        <h6 class="fw-bold mb-3 text-primary">
-                            <i class="bi bi-gear me-2"></i>Settings
-                        </h6>
-                        <div class="mb-4">
-                            <div class="form-check mb-2">
-                                <input type="checkbox" name="email_notifications" id="id_email_notifications"
-                                       class="form-check-input"
-                                       {% if user.profile.email_notifications %}checked{% endif %}>
-                                <label for="id_email_notifications" class="form-check-label">
-                                    Email me when someone comments on my posts
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input type="checkbox" name="is_public" id="id_is_public"
-                                       class="form-check-input"
-                                       {% if user.profile.is_public %}checked{% endif %}>
-                                <label for="id_is_public" class="form-check-label">
-                                    Make my profile visible to other users
-                                </label>
+                        <!-- Bio Section -->
+                        <div class="settings-section">
+                            <h5 class="section-heading">
+                                <i class="bi bi-card-text"></i>
+                                About You
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="id_bio" class="form-label">Bio</label>
+                                    <textarea name="bio" id="id_bio" class="form-control" rows="4"
+                                              placeholder="Tell readers a bit about yourself...">{{ user.profile.bio }}</textarea>
+                                    <small class="form-text">Brief description for your profile.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_location" class="form-label">Location</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                        <input type="text" name="location" id="id_location"
+                                               class="form-control" value="{{ user.profile.location }}"
+                                               placeholder="City, Country">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_website" class="form-label">Website</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                                        <input type="url" name="website" id="id_website"
+                                               class="form-control" value="{{ user.profile.website }}"
+                                               placeholder="https://yourwebsite.com">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Submit -->
-                        <div class="d-flex gap-2">
+                        <!-- Social Links Section -->
+                        <div class="settings-section">
+                            <h5 class="section-heading">
+                                <i class="bi bi-share"></i>
+                                Social Links
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="id_twitter" class="form-label">Twitter</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-twitter-x"></i></span>
+                                        <input type="text" name="twitter" id="id_twitter"
+                                               class="form-control" value="{{ user.profile.twitter }}"
+                                               placeholder="username">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="id_github" class="form-label">GitHub</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-github"></i></span>
+                                        <input type="text" name="github" id="id_github"
+                                               class="form-control" value="{{ user.profile.github }}"
+                                               placeholder="username">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="id_linkedin" class="form-label">LinkedIn</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-linkedin"></i></span>
+                                        <input type="text" name="linkedin" id="id_linkedin"
+                                               class="form-control" value="{{ user.profile.linkedin }}"
+                                               placeholder="username">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences Section -->
+                        <div class="settings-section">
+                            <h5 class="section-heading">
+                                <i class="bi bi-sliders"></i>
+                                Preferences
+                            </h5>
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h6>Email Notifications</h6>
+                                    <p>Receive email when someone comments on your posts</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="email_notifications" id="id_email_notifications"
+                                           class="form-check-input"
+                                           {% if user.profile.email_notifications %}checked{% endif %}>
+                                </div>
+                            </div>
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h6>Public Profile</h6>
+                                    <p>Make your profile visible to other users</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="is_public" id="id_is_public"
+                                           class="form-check-input"
+                                           {% if user.profile.is_public %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="settings-actions">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-check-lg me-2"></i>Save Changes
                             </button>
@@ -157,4 +192,201 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-page {
+        background: var(--gray-100);
+        min-height: calc(100vh - 200px);
+    }
+
+    .settings-header {
+        margin-bottom: 2rem;
+    }
+
+    .settings-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.25rem;
+    }
+
+    .settings-header p {
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .settings-section {
+        padding: 2rem;
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .settings-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-heading i {
+        color: var(--primary);
+    }
+
+    /* Avatar Upload */
+    .avatar-upload {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .current-avatar img,
+    .current-avatar .avatar-initials {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .current-avatar .avatar-initials {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    .upload-hint {
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+        margin: 0.5rem 0 0;
+    }
+
+    /* Form styling */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+    }
+
+    .form-text {
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+    }
+
+    .input-group-text {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-500);
+    }
+
+    /* Preferences */
+    .preference-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .preference-item:first-of-type {
+        padding-top: 0;
+    }
+
+    .preference-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .preference-info h6 {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 0.25rem;
+    }
+
+    .preference-info p {
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+
+    /* Actions */
+    .settings-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 2rem;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-100);
+    }
+
+    @media (max-width: 767.98px) {
+        .settings-section {
+            padding: 1.5rem;
+        }
+
+        .avatar-upload {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .settings-actions {
+            flex-direction: column;
+        }
+
+        .settings-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preview avatar image
+    document.getElementById('id_avatar').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatar-preview');
+                if (preview.tagName === 'IMG') {
+                    preview.src = e.target.result;
+                } else {
+                    // Replace initials with image
+                    const img = document.createElement('img');
+                    img.id = 'avatar-preview';
+                    img.src = e.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    preview.parentNode.replaceChild(img, preview);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
 {% endblock %}

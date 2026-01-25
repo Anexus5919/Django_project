@@ -1,28 +1,14 @@
 {% load static %}
-<!--
-=============================================================================
-Navigation Bar Component
-=============================================================================
-
-Bootstrap 5 responsive navbar that:
-    - Shows logo and site name
-    - Collapses to hamburger menu on mobile
-    - Shows user menu when logged in
-    - Shows login/register when logged out
-
-=============================================================================
--->
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
     <div class="container">
         <!-- Brand/Logo -->
-        <a class="navbar-brand d-flex align-items-center" href="{% url 'blog:home' %}">
-            <i class="bi bi-journal-richtext me-2 fs-4"></i>
-            <span class="fw-bold">{{ site_name }}</span>
+        <a class="navbar-brand d-flex align-items-center fw-bold" href="{% url 'blog:home' %}">
+            <i class="bi bi-journal-richtext me-2 text-primary fs-4"></i>
+            <span>{{ site_name|default:"BlogCMS" }}</span>
         </a>
 
         <!-- Mobile Toggle Button -->
-        <button class="navbar-toggler" type="button"
+        <button class="navbar-toggler border-0" type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#navbarMain"
                 aria-controls="navbarMain"
@@ -38,13 +24,13 @@ Bootstrap 5 responsive navbar that:
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
                        href="{% url 'blog:home' %}">
-                        <i class="bi bi-house-door me-1"></i> Home
+                        Home
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'post_list' %}active{% endif %}"
                        href="{% url 'blog:post_list' %}">
-                        <i class="bi bi-file-text me-1"></i> Blog
+                        Blog
                     </a>
                 </li>
 
@@ -53,14 +39,15 @@ Bootstrap 5 responsive navbar that:
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown"
                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-folder me-1"></i> Categories
+                        Categories
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="categoryDropdown">
                         {% for category in all_categories %}
                         <li>
-                            <a class="dropdown-item" href="{{ category.get_absolute_url }}">
+                            <a class="dropdown-item d-flex justify-content-between align-items-center"
+                               href="{{ category.get_absolute_url }}">
                                 {{ category.name }}
-                                <span class="badge bg-secondary float-end">{{ category.post_count }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ category.post_count }}</span>
                             </a>
                         </li>
                         {% endfor %}
@@ -70,12 +57,14 @@ Bootstrap 5 responsive navbar that:
             </ul>
 
             <!-- Search Form -->
-            <form class="d-flex me-3" action="{% url 'blog:search' %}" method="GET">
-                <div class="input-group">
-                    <input class="form-control" type="search" name="q"
-                           placeholder="Search..." aria-label="Search"
+            <form class="d-flex me-3 my-2 my-lg-0" action="{% url 'blog:search' %}" method="GET">
+                <div class="input-group input-group-sm">
+                    <input class="form-control bg-dark text-light border-secondary"
+                           type="search" name="q"
+                           placeholder="Search posts..."
+                           aria-label="Search"
                            value="{{ request.GET.q }}">
-                    <button class="btn btn-light" type="submit">
+                    <button class="btn btn-outline-primary" type="submit">
                         <i class="bi bi-search"></i>
                     </button>
                 </div>
@@ -86,35 +75,44 @@ Bootstrap 5 responsive navbar that:
                 {% if user.is_authenticated %}
                     <!-- Create Post Button -->
                     <li class="nav-item me-2">
-                        <a class="btn btn-light btn-sm" href="{% url 'blog:post_create' %}">
-                            <i class="bi bi-plus-lg me-1"></i> New Post
+                        <a class="btn btn-primary btn-sm d-flex align-items-center"
+                           href="{% url 'blog:post_create' %}">
+                            <i class="bi bi-plus-lg me-1"></i>
+                            <span class="d-none d-md-inline">Write</span>
                         </a>
                     </li>
 
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                        <a class="nav-link dropdown-toggle d-flex align-items-center py-1" href="#"
                            id="userDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <!-- User Avatar -->
-                            {% if user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}"
-                                 alt="{{ user.username }}"
-                                 class="rounded-circle me-2"
-                                 width="32" height="32"
-                                 style="object-fit: cover;">
-                            {% else %}
-                            <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center me-2"
-                                 style="width: 32px; height: 32px;">
-                                <i class="bi bi-person"></i>
+                            <!-- User Avatar with Initials Fallback -->
+                            <div class="avatar-circle me-2">
+                                {% if user.profile.avatar and user.profile.avatar.name %}
+                                    <img src="{{ user.profile.avatar.url }}"
+                                         alt="{{ user.username }}"
+                                         class="rounded-circle"
+                                         width="32" height="32"
+                                         style="object-fit: cover;">
+                                {% else %}
+                                    <div class="avatar-initials">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
-                            <span>{{ user.username }}</span>
+                            <span class="d-none d-lg-inline">{{ user.username }}</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow"
+                            aria-labelledby="userDropdown">
+                            <li class="dropdown-header">
+                                <strong>{{ user.username }}</strong>
+                                <br><small class="text-muted">{{ user.email }}</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                                    <i class="bi bi-person-circle me-2"></i> My Profile
+                                    <i class="bi bi-person me-2"></i> My Profile
                                 </a>
                             </li>
                             <li>
@@ -133,7 +131,7 @@ Bootstrap 5 responsive navbar that:
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger" href="{% url 'account_logout' %}">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sign Out
                                 </a>
                             </li>
                         </ul>
@@ -142,12 +140,12 @@ Bootstrap 5 responsive navbar that:
                     <!-- Login/Register for Anonymous Users -->
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'account_login' %}">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            Sign In
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="btn btn-light btn-sm" href="{% url 'account_signup' %}">
-                            <i class="bi bi-person-plus me-1"></i> Register
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">
+                            Get Started
                         </a>
                     </li>
                 {% endif %}
