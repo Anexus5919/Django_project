@@ -20,6 +20,9 @@ Django settings are organized into sections:
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =============================================================================
 # PATH CONFIGURATION
@@ -248,7 +251,7 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email verificatio
 ACCOUNT_LOGIN_METHODS = {'email'}           # Login with email (not username)
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_UNIQUE_EMAIL = True                  # Each email can only be used once
-ACCOUNT_EMAIL_VERIFICATION = 'optional'      # Options: 'mandatory', 'optional', 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'none'           # Options: 'mandatory', 'optional', 'none'
 ACCOUNT_SESSION_REMEMBER = True              # Remember me checkbox
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'            # Redirect after logout
 
@@ -271,21 +274,21 @@ LOGIN_URL = '/accounts/login/'               # Where to redirect non-logged user
 #   set EMAIL_HOST_PASSWORD=your-16-char-app-password
 # =============================================================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-
-# Load from environment variables for security (recommended)
-# Or replace with your actual credentials for testing
+# Use Gmail SMTP when credentials are configured, otherwise fall back to console
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-# Default "From" address for emails
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'Blog CMS <noreply@blogcms.com>')
-
-# Timeout for email connections (seconds)
-EMAIL_TIMEOUT = 30
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    EMAIL_TIMEOUT = 30
+else:
+    # No credentials configured — use console backend (prints emails to terminal)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'Blog CMS <noreply@blogcms.com>'
 
 # =============================================================================
 # CRISPY FORMS CONFIGURATION
