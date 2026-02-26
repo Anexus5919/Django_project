@@ -126,3 +126,5 @@ class UserProfileAdmin(admin.ModelAdmin):
 # Unregister the default User admin and register our extended version
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
+
+
